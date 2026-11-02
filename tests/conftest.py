@@ -1,6 +1,7 @@
 """Quantum Flow Technologies — Global Test Fixtures and Configuration."""
 
 from collections.abc import AsyncGenerator
+from typing import Any, cast
 
 import pytest
 from httpx import ASGITransport, AsyncClient
@@ -54,7 +55,7 @@ async def async_client(test_db_session: AsyncSession) -> AsyncGenerator[AsyncCli
         yield test_db_session
 
     app.dependency_overrides[get_db] = override_get_db
-    transport = ASGITransport(app=app)
+    transport = ASGITransport(app=cast(Any, app))
     async with AsyncClient(transport=transport, base_url="http://testserver") as client:
         yield client
     app.dependency_overrides.pop(get_db, None)

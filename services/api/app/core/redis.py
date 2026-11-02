@@ -24,6 +24,7 @@ async def check_redis_health() -> tuple[bool, str]:
             socket_connect_timeout=2.0,
             socket_timeout=2.0,
         )
+        assert client is not None
         ping_res = client.ping()
         pong = await ping_res if inspect.isawaitable(ping_res) else ping_res
         if pong is True:

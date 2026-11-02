@@ -15,10 +15,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
-from services.api.app.api.v1.endpoints.health import (
-    get_live_health,
-    get_ready_health,
-)
+from services.api.app.api.v1.endpoints.health import router as health_router
 from services.api.app.api.v1.router import api_v1_router
 from services.api.app.core.config import settings
 from services.api.app.core.redis import close_redis_client
@@ -138,21 +135,7 @@ async def general_exception_handler(request: Request, exc: Exception) -> JSONRes
 # ------------------------------------------------------------------------------
 # Top-Level Health Probes (Required by Container Orchestrators & Monitoring)
 # ------------------------------------------------------------------------------
-app.add_api_route(
-    "/health/live",
-    get_live_health,
-    methods=["GET"],
-    tags=["Health & Diagnostics"],
-    summary="Liveness Probe",
-)
-
-app.add_api_route(
-    "/health/ready",
-    get_ready_health,
-    methods=["GET"],
-    tags=["Health & Diagnostics"],
-    summary="Readiness Probe",
-)
+app.include_router(health_router)
 
 # ------------------------------------------------------------------------------
 # Versioned API Routes (/api/v1)
