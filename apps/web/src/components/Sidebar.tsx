@@ -72,7 +72,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 >
                   <Icon size={18} />
                   <span>{stage.label}</span>
-                  <span className="qf-nav-tag qf-nav-tag-planned">{stage.status}</span>
+                  <span
+                    className={`qf-nav-tag ${
+                      stage.status === "Sprint 1" ? "qf-nav-tag-live" : "qf-nav-tag-planned"
+                    }`}
+                  >
+                    {stage.status === "Sprint 1" ? "Active" : stage.status}
+                  </span>
                 </button>
               </li>
             );

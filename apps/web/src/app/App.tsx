@@ -3,6 +3,7 @@ import { Header } from "../components/Header";
 import { Sidebar } from "../components/Sidebar";
 import { Footer } from "../components/Footer";
 import { DashboardOverview } from "../features/dashboard/DashboardOverview";
+import { TargetManagement } from "../features/targets/TargetManagement";
 
 export const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>("diagnostics");
@@ -14,7 +15,8 @@ export const App: React.FC = () => {
         <Sidebar activeTab={activeTab} onSelectTab={setActiveTab} />
         <main className="qf-main-content" role="main">
           {activeTab === "diagnostics" && <DashboardOverview />}
-          {activeTab !== "diagnostics" && (
+          {(activeTab === "discover" || activeTab === "inventory") && <TargetManagement />}
+          {activeTab !== "diagnostics" && activeTab !== "discover" && activeTab !== "inventory" && (
             <div className="qf-placeholder-view">
               <h2>Module Scheduled for Upcoming Sprint</h2>
               <p>
