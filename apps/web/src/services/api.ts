@@ -1,7 +1,11 @@
 import {
+  AssetListResponse,
+  DiscoveryJobListResponse,
   HealthLiveResponse,
   HealthReadyResponse,
   Observation,
+  RiskAssessment,
+  RiskAssessmentListResponse,
   Scan,
   Target,
   TargetCreate,
@@ -168,5 +172,131 @@ export async function getObservation(id: string): Promise<Observation> {
     headers: { Accept: "application/json" },
   });
   return handleResponse<Observation>(response);
+}
+
+/**
+ * Cryptographic Asset & CBOM APIs (Sprint 2)
+ */
+export async function listAssets(params?: {
+  asset_type?: string;
+  classification?: string;
+  skip?: number;
+  limit?: number;
+}): Promise<AssetListResponse> {
+  const query = new URLSearchParams();
+  if (params?.asset_type) query.set("asset_type", params.asset_type);
+  if (params?.classification) query.set("classification", params.classification);
+  if (params?.skip !== undefined) query.set("skip", params.skip.toString());
+  if (params?.limit !== undefined) query.set("limit", params.limit.toString());
+
+  const qs = query.toString() ? `?${query.toString()}` : "";
+  const response = await fetch(`${API_BASE_URL}/api/v1/assets${qs}`, {
+    headers: { Accept: "application/json" },
+  });
+  return handleResponse<AssetListResponse>(response);
+}
+
+export function getExportCbomUrl(): string {
+  return `${API_BASE_URL}/api/v1/cbom/export`;
+}
+
+export function getExportAssetsCsvUrl(): string {
+  return `${API_BASE_URL}/api/v1/assets/export/csv`;
+}
+
+/**
+ * Quantum Risk Assessment APIs (Sprint 2)
+ */
+export async function listRiskAssessments(params?: {
+  risk_category?: string;
+  skip?: number;
+  limit?: number;
+}): Promise<RiskAssessmentListResponse> {
+  const query = new URLSearchParams();
+  if (params?.risk_category) query.set("risk_category", params.risk_category);
+  if (params?.skip !== undefined) query.set("skip", params.skip.toString());
+  if (params?.limit !== undefined) query.set("limit", params.limit.toString());
+
+  const qs = query.toString() ? `?${query.toString()}` : "";
+  const response = await fetch(`${API_BASE_URL}/api/v1/risk-assessments${qs}`, {
+    headers: { Accept: "application/json" },
+  });
+  return handleResponse<RiskAssessmentListResponse>(response);
+}
+
+export async function assessAsset(assetId: string): Promise<RiskAssessment> {
+  const response = await fetch(`${API_BASE_URL}/api/v1/assets/${assetId}/assessments`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    },
+  });
+  return handleResponse<RiskAssessment>(response);
+}
+
+/**
+ * Source Code & Configuration Discovery APIs (Sprint 2)
+ */
+export async function uploadSourceArchive(file: File): Promise<{
+  observation_id: string;
+  files_scanned: number;
+  findings_count: number;
+  dependencies_count: number;
+}> {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const response = await fetch(`${API_BASE_URL}/api/v1/source/upload`, {
+    method: "POST",
+    body: formData,
+  });
+  return handleResponse(response);
+}
+
+export async function importConfiguration(
+  configType: "nginx" | "apache" | "kubernetes",
+  content: string,
+  filePath: string = "imported.conf"
+): Promise<{
+  observation_id: string;
+  findings_count: number;
+  findings: unknown[];
+}> {
+  const response = await fetch(`${API_BASE_URL}/api/v1/config/import`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    },
+    body: JSON.stringify({
+      config_type: configType,
+      file_path: filePath,
+      content,
+    }),
+  });
+  return handleResponse(response);
+}
+
+/**
+ * Discovery Job Execution APIs (Sprint 2)
+ */
+export async function listDiscoveryJobs(params?: {
+  status?: string;
+  job_type?: string;
+  skip?: number;
+  limit?: number;
+}): Promise<DiscoveryJobListResponse> {
+  const query = new URLSearchParams();
+  if (params?.status) query.set("status", params.status);
+  if (params?.job_type) query.set("job_type", params.job_type);
+  if (params?.skip !== undefined) query.set("skip", params.skip.toString());
+  if (params?.limit !== undefined) query.set("limit", params.limit.toString());
+
+  const qs = query.toString() ? `?${query.toString()}` : "";
+  const response = await fetch(`${API_BASE_URL}/api/v1/jobs${qs}`, {
+    headers: { Accept: "application/json" },
+  });
+  return handleResponse<DiscoveryJobListResponse>(response);
 }
 

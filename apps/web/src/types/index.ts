@@ -140,3 +140,103 @@ export interface Observation {
   observed_at: string;
 }
 
+/**
+ * Sprint 2: Cryptographic Assets & CBOM Inventory types
+ */
+export interface CryptographicAsset {
+  id: string;
+  target_id: string | null;
+  asset_type: string;
+  asset_key: string;
+  display_name: string;
+  locator: string | null;
+  environment: string;
+  business_criticality: string;
+  algorithm_family: string | null;
+  algorithm_name: string | null;
+  cryptographic_purpose: string;
+  parameters: Record<string, unknown>;
+  lifecycle_status: string;
+  classification: string;
+  confidence_score: number;
+  first_seen_at: string;
+  last_seen_at: string;
+}
+
+export interface AssetListResponse {
+  total: number;
+  items: CryptographicAsset[];
+  skip: number;
+  limit: number;
+}
+
+/**
+ * Sprint 2: Quantum Risk Assessment types
+ */
+export interface RiskFactor {
+  id: string;
+  dimension: string;
+  code: string;
+  title: string;
+  weight: number;
+  rating: number;
+  contribution: number;
+  rationale: string;
+}
+
+export interface Recommendation {
+  id: string;
+  title: string;
+  description: string;
+  remediation_category: string;
+  priority: string;
+  validation_steps: string[];
+  known_limitations?: string | null;
+}
+
+export interface RiskAssessment {
+  id: string;
+  asset_id: string;
+  assessment_number: number;
+  status: string;
+  score: number;
+  risk_category: "critical" | "high" | "elevated" | "guarded" | "low";
+  quantum_threat_type: string;
+  threat_summary: string;
+  evidence_quality: string;
+  created_at: string;
+  factors: RiskFactor[];
+  recommendations: Recommendation[];
+}
+
+export interface RiskAssessmentListResponse {
+  total: number;
+  items: RiskAssessment[];
+  skip: number;
+  limit: number;
+}
+
+/**
+ * Sprint 2: Discovery Job types
+ */
+export interface DiscoveryJob {
+  id: string;
+  job_type: string;
+  status: "pending" | "running" | "completed" | "failed" | "cancelled";
+  target_id: string | null;
+  input_params: Record<string, unknown>;
+  result_summary: Record<string, unknown> | null;
+  error_message: string | null;
+  retry_count: number;
+  created_at: string;
+  started_at: string | null;
+  completed_at: string | null;
+}
+
+export interface DiscoveryJobListResponse {
+  total: number;
+  items: DiscoveryJob[];
+  skip: number;
+  limit: number;
+}
+
