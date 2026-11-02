@@ -172,37 +172,42 @@ graph TD
 ```text
 quantum-flow-pqc-platform/
 ├── apps/
-│   ├── api/                 # FastAPI REST API application (Control plane)
-│   ├── worker/              # Celery background workers (Execution plane)
-│   └── web/                 # React / Vite / TypeScript web dashboard
+│   └── web/                 # React 18 / Vite / TypeScript dashboard shell
+├── services/
+│   ├── api/                 # FastAPI modular monolith control plane
+│   │   ├── app/
+│   │   │   ├── api/v1/endpoints/  # API route handlers (/health/live, /health/ready)
+│   │   │   ├── core/              # Config, settings, redis client
+│   │   │   ├── db/                # SQLAlchemy Base, session, async engine
+│   │   │   ├── schemas/           # Pydantic schemas
+│   │   │   └── main.py            # FastAPI entry point & exception handlers
+│   │   └── Dockerfile       # Multi-stage non-root Python 3.12 container
+│   └── worker/              # Asynchronous worker process daemon
+│       ├── app/             # Background task runner scaffold
+│       └── Dockerfile       # Multi-stage non-root Python 3.12 container
 ├── packages/
-│   ├── scanner/             # TLS collector, target validation, SSRF filter
-│   ├── cbom/                # CBOM correlation engine & export generators
-│   └── risk-engine/         # Deterministic quantum risk scoring engine
+│   └── scanner/             # TLS collector & RFC 5737/3849 safety guardrails
+├── migrations/              # Alembic database migration environment
+│   ├── versions/            # Schema migration scripts
+│   └── env.py               # Async/Sync Alembic runner
+├── tests/
+│   ├── unit/                # Backend unit tests (config, health endpoints, routing)
+│   ├── integration/         # Integration test suite
+│   ├── security/            # Security test suite (CORS, SSRF restrictions)
+│   ├── contract/            # API contract verification
+│   └── e2e/                 # End-to-end testing
 ├── infra/
-│   ├── docker/              # Local Docker Compose and Dockerfile manifests
-│   └── scripts/             # Local initialization and database utilities
-├── docs/                    # Centralized engineering documentation
-│   ├── README.md            # Central documentation index
-│   ├── Documentation_Governance.md # Document lifecycle & approval rules
-│   ├── REPOSITORY_SETUP_AUDIT.md # Repository audit report
-│   ├── 00-company-vision/   # Vision & strategic roadmap documentation
-│   ├── 01-product/          # PRD and Product Glossary
-│   ├── 02-technical-architecture/ # TRD, SAD, Implementation Blueprint, ADRs
-│   ├── 03-database/         # Database Design Document (DDD)
-│   ├── 04-api/              # REST API Specifications
-│   ├── 05-risk-engine/      # Quantum Risk Assessment Methodology
-│   ├── 06-cbom/             # CBOM Asset Correlation Engine Design
-│   ├── 07-security/         # Threat Model, Data Governance, Incident Response
-│   ├── 08-development/      # Setup Guide, Coding Standards, Testing Strategy, Runbook
-│   └── 09-project-management/# Implementation Roadmap, Backlog, Traceability Matrix
-├── .editorconfig            # Cross-editor formatting rules
+│   └── docker/              # Nginx reverse proxy configuration
+├── .github/
+│   └── workflows/
+│       └── ci.yml           # CI workflow (Lint, Format, Mypy, Pytest, Web CI)
+├── docker-compose.yml       # PostgreSQL 16 & Redis 7 local infrastructure
+├── pyproject.toml           # Python packaging, Ruff, Mypy, and Pytest configuration
+├── package.json             # Root npm workspace manifest
+├── package-lock.json        # Committed npm dependency lockfile
 ├── .env.example             # Safe environment variable template
-├── .gitignore               # Multi-stack git ignore rules
-├── CODE_OF_CONDUCT.md       # Contributor code of conduct & ethics
-├── CONTRIBUTING.md          # Contributor guidance summary
-├── README.md                # Project documentation overview
-└── SECURITY.md              # Security policy & responsible disclosure
+├── Makefile                 # Standard developer lifecycle targets
+└── docs/                    # Centralized engineering documentation library
 ```
 
 ---
@@ -255,38 +260,71 @@ For detailed installation and operating-system-specific instructions (including 
 
 ---
 
-## 13. Environment Configuration
+## 13. Environment Configuration & Setup
 
 1. Copy the safe configuration template:
    ```powershell
    Copy-Item .env.example .env
    # or on Linux/macOS: cp .env.example .env
    ```
-2. Verify local non-production defaults (PostgreSQL on port `5432`, Redis on `6379`, local API on `8000`).
-3. **Never place real credentials, production secrets, or private API keys in `.env`.**
+2. Start the backing infrastructure services:
+   ```bash
+   # Start PostgreSQL 16 and Redis 7 in detached mode
+   make docker-up
+   # or: docker compose up -d postgres redis
+   ```
+3. Run Alembic schema migrations:
+   ```bash
+   make migrate
+   # or: python -m alembic upgrade head
+   ```
+4. Start the development servers:
+   ```bash
+   # Terminal 1: Backend Control Plane (FastAPI) on http://127.0.0.1:8000
+   make dev-api
+
+   # Terminal 2: Asynchronous Worker Process
+   make dev-worker
+
+   # Terminal 3: Frontend Web Shell on http://localhost:5173
+   make dev-web
+   ```
 
 ---
 
 ## 14. Testing and Code Quality Commands
 
-Enforce quality using the testing suite defined in [`docs/08-development/Testing_Strategy.md`](docs/08-development/Testing_Strategy.md):
+All quality gates are enforced locally and in continuous integration:
 
-```powershell
-# Format and lint with Ruff
-ruff format .
-ruff check . --fix
+```bash
+# Display all Makefile targets
+make help
 
-# Static type checking
-mypy apps/ packages/
+# Run all test suites (Backend Pytest + Frontend Vitest)
+make test
 
-# Run unit and integration tests with coverage
-pytest -v --cov=apps --cov=packages
+# Backend-only tests
+make test-backend
 
-# Frontend verification
-cd apps/web
-pnpm run lint
-pnpm run typecheck
+# Frontend-only tests
+make test-frontend
+
+# Run linters across entire monorepo (Ruff + ESLint)
+make lint
+
+# Run type checkers (Mypy + TypeScript tsc)
+make typecheck
+
+# Verify formatting without applying changes
+make format-check
 ```
+
+### Health Check Endpoints
+
+| Probe Route | Method | Purpose | Response |
+|---|:---:|---|---|
+| `/health/live` | GET | Liveness probe (control plane responsive) | `200 OK` JSON envelope |
+| `/health/ready` | GET | Readiness probe (PostgreSQL & Redis connected) | `200 OK` (Ready) / `503 Service Unavailable` (Degraded) |
 
 ---
 
@@ -297,6 +335,7 @@ pnpm run typecheck
 > The Quantum Flow scanner is designed exclusively to inspect endpoints, certificates, and infrastructure that an organization owns or has received **explicit, documented legal authorization** to assess.  
 > - Scanning unauthorized targets or attempting to bypass network controls is strictly prohibited and violates platform policy and computer misuse legislation.
 > - The platform incorporates non-bypassable pre-connection checks blocking private IPv4/IPv6 ranges (RFC 1918), loopback, link-local, and cloud metadata services (`169.254.169.254`).
+> - Target scanning during development is strictly restricted to RFC 5737 and RFC 3849 documentation testnets (`ALLOW_TEST_TARGETS_ONLY=true`).
 > - **The platform NEVER collects, handles, or stores private cryptographic keys.**
 
 For security disclosures, review [`SECURITY.md`](SECURITY.md) and the [`Incident Response Plan`](docs/07-security/Incident_Response_Plan.md).
@@ -306,11 +345,12 @@ For security disclosures, review [`SECURITY.md`](SECURITY.md) and the [`Incident
 ## 16. Current Development Status
 
 > [!IMPORTANT]
-> **CURRENT REPOSITORY STAGE: SPRINT 0 (ENGINEERING SETUP & ARCHITECTURE BASELINE)**  
-> - **Documentation & Specifications:** Complete specifications and governance guides established across `docs/`.
-> - **Engineering Standards & Guardrails:** `.gitignore`, `.env.example`, `.editorconfig`, `CODE_OF_CONDUCT.md`, `CONTRIBUTING.md`, and `SECURITY.md` established.
-> - **Application Implementation:** **NOT YET STARTED.** Application code (`apps/api/`, `apps/worker/`, `apps/web/`, `packages/scanner/`) has **not** been implemented. 
-> - **Operational State:** Scanners, risk scoring engines, CBOM correlation, and background workers are currently in technical design and **are not operational in code**.
+> **CURRENT REPOSITORY STAGE: SPRINT 0 (ENGINEERING FOUNDATION COMPLETE)**  
+> - **Engineering Foundation:** Modular monolith backend (`services/api`), worker daemon scaffold (`services/worker`), and React 18/TypeScript web shell (`apps/web`) are active and verified.
+> - **Persistence & Cache:** PostgreSQL 16 (SQLAlchemy 2.x async engine) and Redis 7 (async client) integrated with dual `/health/live` and `/health/ready` telemetry probes.
+> - **Database Migrations:** Alembic migration environment operational in `migrations/`.
+> - **Testing & CI/CD:** 20 automated tests passing (14 backend tests covering config, health, routing, and CORS security; 6 frontend tests covering shell rendering, telemetry widgets, degraded states, and navigation). GitHub Actions CI workflow configured in `.github/workflows/ci.yml`.
+> - **Planned Subsystems:** Production TLS network scanning, CBOM correlation engine, and deterministic quantum risk engine are scheduled for implementation in Sprints 1–6 per the [Implementation Roadmap](docs/09-project-management/Implementation_Roadmap.md).
 
 ---
 
