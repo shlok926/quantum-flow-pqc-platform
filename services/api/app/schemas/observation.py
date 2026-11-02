@@ -13,7 +13,7 @@ class ObservationResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: UUID
-    target_id: UUID
+    target_id: UUID | None
     scan_id: UUID | None
     observation_type: str
     source: str
