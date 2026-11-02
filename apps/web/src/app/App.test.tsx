@@ -45,7 +45,7 @@ describe("App Shell", () => {
     });
   });
 
-  it("handles sidebar navigation to future planned workflow stage", async () => {
+  it("handles sidebar navigation to discovery workflow and future planned stages", async () => {
     vi.spyOn(api, "fetchHealthLive").mockResolvedValue({
       status: "healthy",
       version: "0.1.0",
@@ -63,14 +63,28 @@ describe("App Shell", () => {
       },
     });
 
+    vi.spyOn(api, "listTargets").mockResolvedValue({
+      total: 0,
+      items: [],
+    });
+
     render(<App />);
 
+    // 1. Navigate to Sprint 1 implemented Discover module
     const discoverNavButton = screen.getByText("1. Discover");
     await userEvent.click(discoverNavButton);
 
-    expect(screen.getByText("Module Scheduled for Upcoming Sprint")).toBeInTheDocument();
-    expect(screen.getByText("DISCOVER")).toBeInTheDocument();
+    expect(screen.getByText("Target Discovery & Bounded TLS Inspection")).toBeInTheDocument();
+    expect(screen.getByText("Register Domain Target")).toBeInTheDocument();
 
+    // 2. Navigate to future planned module (Stage 3: Prioritise)
+    const prioritiseNavButton = screen.getByText("3. Prioritise (QVI)");
+    await userEvent.click(prioritiseNavButton);
+
+    expect(screen.getByText("Module Scheduled for Upcoming Sprint")).toBeInTheDocument();
+    expect(screen.getByText("PRIORITISE")).toBeInTheDocument();
+
+    // 3. Return to diagnostics
     const returnBtn = screen.getByRole("button", { name: /return to system diagnostics/i });
     await userEvent.click(returnBtn);
 
