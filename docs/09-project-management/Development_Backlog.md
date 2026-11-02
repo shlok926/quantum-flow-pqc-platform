@@ -61,64 +61,39 @@
 
 ---
 
-## 4. Sprint 2 — Scan Orchestration Foundation
+## 4. Sprint 2 — Cryptographic Discovery & Risk Intelligence Milestone
+
+### Sprint 2 Core Deliverables
 
 | Task ID | Task Title | Priority | Dependencies | Status |
 |---|---|---|---|---|
-| **QF-017** | Configure Celery task worker with Redis broker | P0 | QF-004, QF-014 | NOT STARTED |
-| **QF-018** | Implement Scan Job state machine and durable transitions | P0 | QF-014, QF-017 | NOT STARTED |
-| **QF-019** | Implement worker lease, heartbeat, and zombie task reclamation | P1 | QF-018 | NOT STARTED |
-| **QF-020** | Build Scan Job submission, status, and cancellation API endpoints | P1 | QF-018 | NOT STARTED |
-| **QF-021** | Implement duplicate delivery idempotency guards and worker tests | P0 | QF-019, QF-020 | NOT STARTED |
+| **QF-DISC-01** | Discovery Job Execution Engine (PostgreSQL durable state, SKIP LOCKED concurrency, worker leases, zombie recovery, duplicate prevention) | High | QF-010, QF-014 | VERIFIED |
+| **QF-SRC-01** | Source Code Cryptographic Discovery (Python AST analysis; JS/TS and Java regex pattern matching; Zip Slip, Bomb, and Private Key defense with 50MB ceiling) | High | QF-DISC-01 | VERIFIED |
+| **QF-DEP-01** | Dependency Manifest Scanner (Declared dependencies from requirements.txt, package.json, pom.xml; lockfile-resolved records from poetry.lock, package-lock.json; crypto library classification; 5MB manifest size limit) | High | QF-SRC-01 | VERIFIED |
+| **QF-CFG-01** | Configuration Import Engine (Nginx ssl_protocols/ciphers, Apache SSL, Kubernetes Ingress TLS parsing; private keys never stored) | High | None | VERIFIED |
+| **QF-CBOM-01** | CBOM Asset Correlation Engine (Deterministic asset keys, CryptographicAsset, AssetObservation, AssetRelationship graph, CycloneDX 1.6) | Critical | QF-007, QF-SRC-01 | VERIFIED |
+| **QF-RISK-01** | Quantum Risk Rules Engine (Methodology v1.0, 8 dimensions [7 weighted Q/R/L/E/B/M/V summing to 950 raw points, unweighted D8 evidence quality, 0–1000 prioritization scale], Shor vs Grover, traceable recommendations) | Critical | QF-CBOM-01 | VERIFIED |
+| **QF-REP-01** | Assessment Reports & Exports (CycloneDX 1.6 JSON, injection-safe CSV with formula prefix neutralization, executive Markdown summary) | High | QF-CBOM-01, QF-RISK-01 | VERIFIED |
+| **QF-UI-02** | Frontend Discovery & Risk Intelligence (Source upload, Config import, CBOM Asset Explorer, Quantum Risk Dashboard, CycloneDX/CSV exports) | High | QF-CBOM-01, QF-RISK-01 | VERIFIED |
 
----
-
-## 5. Sprint 3 — TLS Collector Proof-of-Concept
-
-| Task ID | Task Title | Priority | Dependencies | Status |
-|---|---|---|---|---|
-| **QF-022** | Implement target validation filter and SSRF private IP blocker | P0 | QF-012, QF-018 | NOT STARTED |
-| **QF-023** | Implement two-stage DNS rebinding defense and worker socket binding | P0 | QF-022 | NOT STARTED |
-| **QF-024** | Implement bounded TLS handshake and socket timeout manager | P1 | QF-023 | NOT STARTED |
-| **QF-025** | Implement X.509 certificate chain extractor and ASN.1 parser | P1 | QF-024 | NOT STARTED |
-| **QF-026** | Implement cipher suite and key exchange parameter extractor | P1 | QF-024 | NOT STARTED |
-| **QF-027** | Build synthetic TLS test server fixtures and scanner unit tests | P1 | QF-025, QF-026 | NOT STARTED |
-
----
-
-## 6. Sprint 4 — Observation Persistence & CBOM Correlation
+### Sprint 2 Backlog Breakdown & Persistence
 
 | Task ID | Task Title | Priority | Dependencies | Status |
 |---|---|---|---|---|
-| **QF-028** | Implement raw observation schema and immutable JSONB storage | P0 | QF-010, QF-025 | NOT STARTED |
-| **QF-029** | Implement cryptographic asset identity resolution engine | P1 | QF-028 | NOT STARTED |
-| **QF-030** | Implement CBOM asset correlation engine and relationship graph | P1 | QF-029 | NOT STARTED |
-| **QF-031** | Implement certificate rotation detection and historical tracking | P1 | QF-030 | NOT STARTED |
-| **QF-032** | Implement scan coverage summary and limitation calculator | P2 | QF-030 | NOT STARTED |
-
----
-
-## 7. Sprint 5 — Findings and Quantum Risk Assessment
-
-| Task ID | Task Title | Priority | Dependencies | Status |
-|---|---|---|---|---|
-| **QF-033** | Implement cryptographic algorithm classification catalogue | P0 | QF-030 | NOT STARTED |
-| **QF-034** | Implement quantum risk scoring ruleset engine (Shor / Grover) | P0 | QF-033 | NOT STARTED |
-| **QF-035** | Implement rule-based finding and recommendation generator | P1 | QF-034 | NOT STARTED |
-| **QF-036** | Implement risk assessment persistence and versioned API | P1 | QF-035 | NOT STARTED |
-| **QF-037** | Build risk scoring determinism and regression test suite | P0 | QF-034, QF-036 | NOT STARTED |
-
----
-
-## 8. Sprint 6 — Frontend Workflow & CBOM Export
-
-| Task ID | Task Title | Priority | Dependencies | Status |
-|---|---|---|---|---|
-| **QF-038** | Implement React Projects and Targets management interface | P1 | QF-006, QF-015 | NOT STARTED |
-| **QF-039** | Implement Scan submission and real-time status monitor UI | P1 | QF-020, QF-038 | NOT STARTED |
-| **QF-040** | Implement Cryptographic Asset Inventory and CBOM table views | P1 | QF-030, QF-038 | NOT STARTED |
-| **QF-041** | Implement Risk Findings detail and evidence inspector UI | P1 | QF-036, QF-040 | NOT STARTED |
-| **QF-042** | Implement CycloneDX 1.6 and JSON CBOM export service | P2 | QF-030, QF-040 | NOT STARTED |
+| **QF-018** | Implement Scan Job state machine and durable transitions | P0 | QF-014 | COMPLETED |
+| **QF-019** | Implement worker lease, heartbeat, and zombie task reclamation | P1 | QF-018 | COMPLETED |
+| **QF-020** | Build Scan Job submission, status, and cancellation API endpoints | P1 | QF-018 | COMPLETED |
+| **QF-021** | Implement duplicate delivery idempotency guards and worker tests | P0 | QF-019, QF-020 | COMPLETED |
+| **QF-029** | Implement cryptographic asset identity resolution engine | P1 | QF-028 | COMPLETED |
+| **QF-030** | Implement CBOM asset correlation engine and relationship graph | P1 | QF-029 | COMPLETED |
+| **QF-033** | Implement cryptographic algorithm classification catalogue | P0 | QF-030 | COMPLETED |
+| **QF-034** | Implement quantum risk scoring ruleset engine (Shor / Grover) | P0 | QF-033 | COMPLETED |
+| **QF-035** | Implement rule-based finding and recommendation generator | P1 | QF-034 | COMPLETED |
+| **QF-036** | Implement risk assessment persistence and versioned API | P1 | QF-035 | COMPLETED |
+| **QF-037** | Build risk scoring determinism and regression test suite | P0 | QF-034, QF-036 | COMPLETED |
+| **QF-040** | Implement Cryptographic Asset Inventory and CBOM table views | P1 | QF-030, QF-038 | COMPLETED |
+| **QF-041** | Implement Risk Findings detail and evidence inspector UI | P1 | QF-036, QF-040 | COMPLETED |
+| **QF-042** | Implement CycloneDX 1.6 and JSON CBOM export service | P2 | QF-030, QF-040 | COMPLETED |
 
 ---
 
