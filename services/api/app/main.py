@@ -7,7 +7,7 @@ versioned routing, environment CORS, and structured error handling.
 import logging
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
-from typing import Any
+from typing import Any, cast
 
 from fastapi import FastAPI, Request, status
 from fastapi.exceptions import RequestValidationError
@@ -140,7 +140,7 @@ async def general_exception_handler(request: Request, exc: Exception) -> JSONRes
 # ------------------------------------------------------------------------------
 app.add_api_route(
     "/health/live",
-    get_live_health,
+    cast(Any, get_live_health),
     methods=["GET"],
     tags=["Health & Diagnostics"],
     summary="Liveness Probe",
@@ -148,7 +148,7 @@ app.add_api_route(
 
 app.add_api_route(
     "/health/ready",
-    get_ready_health,
+    cast(Any, get_ready_health),
     methods=["GET"],
     tags=["Health & Diagnostics"],
     summary="Readiness Probe",

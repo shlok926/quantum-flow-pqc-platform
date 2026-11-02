@@ -1,6 +1,7 @@
 """Quantum Flow Technologies — Global Test Fixtures and Configuration."""
 
 from collections.abc import AsyncGenerator
+from typing import Any, cast
 
 import pytest
 from httpx import ASGITransport, AsyncClient
@@ -17,6 +18,6 @@ def anyio_backend() -> str:
 @pytest.fixture
 async def async_client() -> AsyncGenerator[AsyncClient, None]:
     """Provide an asynchronous HTTP client bound to the FastAPI application."""
-    transport = ASGITransport(app=app)
+    transport = ASGITransport(app=cast(Any, app))
     async with AsyncClient(transport=transport, base_url="http://testserver") as client:
         yield client
