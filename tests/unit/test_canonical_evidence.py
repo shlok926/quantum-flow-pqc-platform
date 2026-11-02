@@ -48,4 +48,3 @@ def test_verify_evidence_integrity() -> None:
     # Invalid digest strings
     assert verify_evidence_integrity(payload, "") is False
     assert verify_evidence_integrity(payload, "invalid_short_hash") is False
-

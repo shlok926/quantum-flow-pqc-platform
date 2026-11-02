@@ -53,4 +53,3 @@ def verify_evidence_integrity(payload: dict[str, Any], stored_sha256: str) -> bo
 
     computed = compute_canonical_evidence_sha256(payload)
     return hmac.compare_digest(computed, stored_sha256.strip().lower())
-
