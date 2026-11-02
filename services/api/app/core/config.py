@@ -102,6 +102,10 @@ class Settings(BaseSettings):
     )
 
     # Engine & Catalogue Versions
+    allow_test_targets_only: bool = Field(
+        default=True,
+        description="Strict safety flag restricting scans to RFC 5737 / RFC 3849 testnets",
+    )
     collector_version: str = Field(
         default="1.0.0-sprint0", description="Collector version identifier stamped on observations"
     )
