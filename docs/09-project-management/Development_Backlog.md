@@ -18,29 +18,46 @@
 
 | Task ID | Task Title | Priority | Dependencies | Status |
 |---|---|---|---|---|
-| **QF-001** | Confirm repository structure and baseline monorepo directories | P0 | None | NOT STARTED |
-| **QF-002** | Add root-level engineering configuration and documentation index | P0 | None | NOT STARTED |
-| **QF-003** | Configure Python 3.12 and frontend package definitions (`pyproject.toml`, `package.json`) | P0 | QF-001 | NOT STARTED |
-| **QF-004** | Create Docker Compose for local PostgreSQL 16 and Redis 7 | P0 | QF-001 | NOT STARTED |
-| **QF-005** | Create FastAPI application skeleton with `/healthz` endpoint | P1 | QF-003 | NOT STARTED |
-| **QF-006** | Create React / Vite frontend skeleton with basic navigation | P1 | QF-003 | NOT STARTED |
-| **QF-007** | Setup linting, formatting, and type-checking tooling (Ruff, Mypy) | P0 | QF-003 | NOT STARTED |
-| **QF-008** | Implement GitHub Actions pull request CI pipeline | P1 | QF-007 | NOT STARTED |
-| **QF-009** | Draft and submit initial Architecture Decision Record (ADR-0001) | P1 | QF-001 | NOT STARTED |
+| **QF-001** | Confirm repository structure and baseline monorepo directories | P0 | None | COMPLETED |
+| **QF-002** | Add root-level engineering configuration and documentation index | P0 | None | COMPLETED |
+| **QF-003** | Configure Python 3.12 and frontend package definitions (`pyproject.toml`, `package.json`) | P0 | QF-001 | COMPLETED |
+| **QF-004** | Create Docker Compose for local PostgreSQL 16 and Redis 7 | P0 | QF-001 | COMPLETED |
+| **QF-005** | Create FastAPI application skeleton with `/healthz` endpoint | P1 | QF-003 | COMPLETED |
+| **QF-006** | Create React / Vite frontend skeleton with basic navigation | P1 | QF-003 | COMPLETED |
+| **QF-007** | Setup linting, formatting, and type-checking tooling (Ruff, Mypy) | P0 | QF-003 | COMPLETED |
+| **QF-008** | Implement GitHub Actions pull request CI pipeline | P1 | QF-007 | COMPLETED |
+| **QF-009** | Draft and submit initial Architecture Decision Record (ADR-0001) | P1 | QF-001 | COMPLETED |
 
 ---
 
-## 3. Sprint 1 — Persistence and Core Domain
+## 3. Sprint 1 — Target Management & Bounded TLS Discovery Milestone
+
+### Sprint 1 Core Deliverables
 
 | Task ID | Task Title | Priority | Dependencies | Status |
 |---|---|---|---|---|
-| **QF-010** | Configure SQLAlchemy 2.0 and Alembic migration framework | P0 | QF-004, QF-005 | NOT STARTED |
+| **QF-001** | Target registration and management API (Strict FQDN syntax, CRUD, verification challenge, state transitions) | High | QF-004, QF-005 | VERIFIED |
+| **QF-002** | SSRF and DNS rebinding safety engine (Multi-stage resolution, denylist, unwrap IPv4-mapped IPv6, IP pinning, SEC-001 timeout/concurrency bounds) | Critical | None | VERIFIED |
+| **QF-003** | Bounded TLS handshake collector (Port 443 only, pinned IP, strict SNI, X.509 evidence, no key-exchange fabrication, TEST-001 SNI regression protection) | High | QF-002 | VERIFIED |
+| **QF-007** | Observation ingestion and initial CBOM schema (Alembic migration, raw JSONB payload, provenance SHA-256, DATA-001 canonical digest) | High | QF-001, QF-003 | VERIFIED |
+
+### Sprint 1 Backlog Breakdown & Persistence
+
+| Task ID | Task Title | Priority | Dependencies | Status |
+|---|---|---|---|---|
+| **QF-010** | Configure SQLAlchemy 2.0 and Alembic migration framework | P0 | QF-004, QF-005 | COMPLETED |
 | **QF-011** | Implement Tenants, Users, and Projects persistence schema | P0 | QF-010 | NOT STARTED |
-| **QF-012** | Implement Targets and Target Safety validation schema | P0 | QF-011 | NOT STARTED |
-| **QF-013** | Implement Authorisations model and verification logic | P0 | QF-012 | NOT STARTED |
-| **QF-014** | Implement ScanJobs domain entity and initial schema | P0 | QF-013 | NOT STARTED |
-| **QF-015** | Build REST API endpoints for Projects, Targets, and Authorisations | P1 | QF-011, QF-012, QF-013 | NOT STARTED |
+| **QF-012** | Implement Targets and Target Safety validation schema | P0 | QF-011 | COMPLETED |
+| **QF-013** | Implement Authorisations model and verification logic | P0 | QF-012 | COMPLETED |
+| **QF-014** | Implement ScanJobs domain entity and initial schema | P0 | QF-013 | COMPLETED |
+| **QF-015** | Build REST API endpoints for Projects, Targets, and Authorisations | P1 | QF-011, QF-012, QF-013 | COMPLETED |
 | **QF-016** | Implement tenant context dependency and repository isolation tests | P0 | QF-011, QF-015 | NOT STARTED |
+| **QF-022** | Implement target validation filter and SSRF private IP blocker | P0 | QF-012, QF-018 | COMPLETED |
+| **QF-023** | Implement two-stage DNS rebinding defense and worker socket binding | P0 | QF-022 | COMPLETED |
+| **QF-024** | Implement bounded TLS handshake and socket timeout manager | P1 | QF-023 | COMPLETED |
+| **QF-025** | Implement X.509 certificate chain extractor and ASN.1 parser | P1 | QF-024 | COMPLETED |
+| **QF-028** | Implement raw observation schema and immutable JSONB storage | P0 | QF-010, QF-025 | COMPLETED |
+| **QF-038** | Implement React Projects and Targets management interface | P1 | QF-006, QF-015 | COMPLETED |
 
 ---
 
