@@ -4,4 +4,3 @@ from packages.scanner.safety.validator import (
 )
 
 __all__ = ["TargetSafetyViolation", "is_safe_test_target"]
-

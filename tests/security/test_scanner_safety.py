@@ -62,4 +62,3 @@ def test_empty_host_rejected() -> None:
     allowed, msg = is_safe_test_target("   ")
     assert allowed is False
     assert "cannot be empty" in msg
-
