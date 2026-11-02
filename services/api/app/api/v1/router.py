@@ -2,9 +2,17 @@
 
 from fastapi import APIRouter
 
-from services.api.app.api.v1.endpoints import health
+from services.api.app.api.v1.endpoints import (
+    health,
+    observations,
+    scans,
+    targets,
+)
 
 api_v1_router = APIRouter()
 
-# Include health routes also under /api/v1 for API clients
+# Register API v1 domain endpoint routers
 api_v1_router.include_router(health.router)
+api_v1_router.include_router(targets.router)
+api_v1_router.include_router(scans.router)
+api_v1_router.include_router(observations.router)
