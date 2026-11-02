@@ -13,6 +13,7 @@ from sqlalchemy import engine_from_config, pool
 # Ensure project root is in Python sys.path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
+import services.api.app.db.models  # noqa: F401
 from services.api.app.core.config import settings
 from services.api.app.db.base import Base
 
