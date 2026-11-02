@@ -1,0 +1,45 @@
+# ==============================================================================
+# Quantum Flow Technologies — EditorConfig Configuration (.editorconfig)
+# Top-most EditorConfig file
+# ==============================================================================
+root = true
+
+# Default rules for all files
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 4
+
+# Python files
+[*.py]
+indent_style = space
+indent_size = 4
+max_line_length = 100
+
+# Web, Frontend & Configuration files (TypeScript, JavaScript, JSON, YAML, HTML, CSS)
+[*.{js,jsx,ts,tsx,json,yml,yaml,html,css,scss}]
+indent_style = space
+indent_size = 2
+
+# Markdown documentation (preserve trailing whitespace for line breaks if needed, but standardize 2-space or 4-space lists)
+[*.md]
+indent_style = space
+indent_size = 2
+trim_trailing_whitespace = false
+
+# Shell and PowerShell scripts
+[*.{sh,bash}]
+end_of_line = lf
+indent_size = 2
+
+[*.ps1]
+end_of_line = crlf
+indent_size = 4
+
+# Makefile
+[Makefile]
+indent_style = tab
+

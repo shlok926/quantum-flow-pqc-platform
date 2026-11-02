@@ -1,0 +1,144 @@
+# Quantum Flow Engineering Development Backlog
+
+## 1. Backlog Governance & Conventions
+
+- **Product:** Quantum Flow Technologies — Post-Quantum Cryptography (PQC) Discovery & Risk Assessment Platform
+- **Document Status:** Initial Master Engineering Backlog (Sprint 0 through Sprint 7)
+- **Primary Source:** Implementation Blueprint & Repository Setup v1.0
+- **Status Standard:** In accordance with strict engineering integrity rules, **all initial task statuses are set to `NOT STARTED`** until code and verified test suites are committed and merged.
+- **Priority Scale:**
+  - **P0 (Blocker):** Fundamental architecture, security safety, or data integrity prerequisite. Must be completed before dependent tasks can start.
+  - **P1 (High):** Core capability required for the minimum viable discovery and assessment slice.
+  - **P2 (Medium):** Important usability, enhancement, or operational capability.
+  - **P3 (Low):** Nice-to-have or future enhancement.
+
+---
+
+## 2. Sprint 0 — Repository and Engineering Foundation
+
+| Task ID | Task Title | Priority | Dependencies | Status |
+|---|---|---|---|---|
+| **QF-001** | Confirm repository structure and baseline monorepo directories | P0 | None | NOT STARTED |
+| **QF-002** | Add root-level engineering configuration and documentation index | P0 | None | NOT STARTED |
+| **QF-003** | Configure Python 3.12 and frontend package definitions (`pyproject.toml`, `package.json`) | P0 | QF-001 | NOT STARTED |
+| **QF-004** | Create Docker Compose for local PostgreSQL 16 and Redis 7 | P0 | QF-001 | NOT STARTED |
+| **QF-005** | Create FastAPI application skeleton with `/healthz` endpoint | P1 | QF-003 | NOT STARTED |
+| **QF-006** | Create React / Vite frontend skeleton with basic navigation | P1 | QF-003 | NOT STARTED |
+| **QF-007** | Setup linting, formatting, and type-checking tooling (Ruff, Mypy) | P0 | QF-003 | NOT STARTED |
+| **QF-008** | Implement GitHub Actions pull request CI pipeline | P1 | QF-007 | NOT STARTED |
+| **QF-009** | Draft and submit initial Architecture Decision Record (ADR-0001) | P1 | QF-001 | NOT STARTED |
+
+---
+
+## 3. Sprint 1 — Persistence and Core Domain
+
+| Task ID | Task Title | Priority | Dependencies | Status |
+|---|---|---|---|---|
+| **QF-010** | Configure SQLAlchemy 2.0 and Alembic migration framework | P0 | QF-004, QF-005 | NOT STARTED |
+| **QF-011** | Implement Tenants, Users, and Projects persistence schema | P0 | QF-010 | NOT STARTED |
+| **QF-012** | Implement Targets and Target Safety validation schema | P0 | QF-011 | NOT STARTED |
+| **QF-013** | Implement Authorisations model and verification logic | P0 | QF-012 | NOT STARTED |
+| **QF-014** | Implement ScanJobs domain entity and initial schema | P0 | QF-013 | NOT STARTED |
+| **QF-015** | Build REST API endpoints for Projects, Targets, and Authorisations | P1 | QF-011, QF-012, QF-013 | NOT STARTED |
+| **QF-016** | Implement tenant context dependency and repository isolation tests | P0 | QF-011, QF-015 | NOT STARTED |
+
+---
+
+## 4. Sprint 2 — Scan Orchestration Foundation
+
+| Task ID | Task Title | Priority | Dependencies | Status |
+|---|---|---|---|---|
+| **QF-017** | Configure Celery task worker with Redis broker | P0 | QF-004, QF-014 | NOT STARTED |
+| **QF-018** | Implement Scan Job state machine and durable transitions | P0 | QF-014, QF-017 | NOT STARTED |
+| **QF-019** | Implement worker lease, heartbeat, and zombie task reclamation | P1 | QF-018 | NOT STARTED |
+| **QF-020** | Build Scan Job submission, status, and cancellation API endpoints | P1 | QF-018 | NOT STARTED |
+| **QF-021** | Implement duplicate delivery idempotency guards and worker tests | P0 | QF-019, QF-020 | NOT STARTED |
+
+---
+
+## 5. Sprint 3 — TLS Collector Proof-of-Concept
+
+| Task ID | Task Title | Priority | Dependencies | Status |
+|---|---|---|---|---|
+| **QF-022** | Implement target validation filter and SSRF private IP blocker | P0 | QF-012, QF-018 | NOT STARTED |
+| **QF-023** | Implement two-stage DNS rebinding defense and worker socket binding | P0 | QF-022 | NOT STARTED |
+| **QF-024** | Implement bounded TLS handshake and socket timeout manager | P1 | QF-023 | NOT STARTED |
+| **QF-025** | Implement X.509 certificate chain extractor and ASN.1 parser | P1 | QF-024 | NOT STARTED |
+| **QF-026** | Implement cipher suite and key exchange parameter extractor | P1 | QF-024 | NOT STARTED |
+| **QF-027** | Build synthetic TLS test server fixtures and scanner unit tests | P1 | QF-025, QF-026 | NOT STARTED |
+
+---
+
+## 6. Sprint 4 — Observation Persistence & CBOM Correlation
+
+| Task ID | Task Title | Priority | Dependencies | Status |
+|---|---|---|---|---|
+| **QF-028** | Implement raw observation schema and immutable JSONB storage | P0 | QF-010, QF-025 | NOT STARTED |
+| **QF-029** | Implement cryptographic asset identity resolution engine | P1 | QF-028 | NOT STARTED |
+| **QF-030** | Implement CBOM asset correlation engine and relationship graph | P1 | QF-029 | NOT STARTED |
+| **QF-031** | Implement certificate rotation detection and historical tracking | P1 | QF-030 | NOT STARTED |
+| **QF-032** | Implement scan coverage summary and limitation calculator | P2 | QF-030 | NOT STARTED |
+
+---
+
+## 7. Sprint 5 — Findings and Quantum Risk Assessment
+
+| Task ID | Task Title | Priority | Dependencies | Status |
+|---|---|---|---|---|
+| **QF-033** | Implement cryptographic algorithm classification catalogue | P0 | QF-030 | NOT STARTED |
+| **QF-034** | Implement quantum risk scoring ruleset engine (Shor / Grover) | P0 | QF-033 | NOT STARTED |
+| **QF-035** | Implement rule-based finding and recommendation generator | P1 | QF-034 | NOT STARTED |
+| **QF-036** | Implement risk assessment persistence and versioned API | P1 | QF-035 | NOT STARTED |
+| **QF-037** | Build risk scoring determinism and regression test suite | P0 | QF-034, QF-036 | NOT STARTED |
+
+---
+
+## 8. Sprint 6 — Frontend Workflow & CBOM Export
+
+| Task ID | Task Title | Priority | Dependencies | Status |
+|---|---|---|---|---|
+| **QF-038** | Implement React Projects and Targets management interface | P1 | QF-006, QF-015 | NOT STARTED |
+| **QF-039** | Implement Scan submission and real-time status monitor UI | P1 | QF-020, QF-038 | NOT STARTED |
+| **QF-040** | Implement Cryptographic Asset Inventory and CBOM table views | P1 | QF-030, QF-038 | NOT STARTED |
+| **QF-041** | Implement Risk Findings detail and evidence inspector UI | P1 | QF-036, QF-040 | NOT STARTED |
+| **QF-042** | Implement CycloneDX 1.6 and JSON CBOM export service | P2 | QF-030, QF-040 | NOT STARTED |
+
+---
+
+## 9. Sprint 7 — Security Hardening & Pilot Readiness
+
+| Task ID | Task Title | Priority | Dependencies | Status |
+|---|---|---|---|---|
+| **QF-043** | Conduct multi-tenant isolation and PostgreSQL RLS security audit | P0 | QF-016, QF-036 | NOT STARTED |
+| **QF-044** | Conduct SSRF, DNS rebinding, and network fuzzing penetration tests | P0 | QF-022, QF-023 | NOT STARTED |
+| **QF-045** | Implement OIDC / OAuth2 SSO integration and JWT RBAC enforcement | P1 | QF-015, QF-043 | NOT STARTED |
+| **QF-046** | Implement append-only security audit log and provenance verification | P1 | QF-028, QF-043 | NOT STARTED |
+| **QF-047** | Implement operational health metrics, alerts, and pilot runbook | P1 | QF-039, QF-044 | NOT STARTED |
+
+---
+
+## 10. Detailed Task Specifications (Sample: Sprint 0 & 1 Foundation)
+
+### QF-001: Confirm repository structure and baseline monorepo directories
+- **Description:** Establish the approved monorepo folder layout as outlined in TRD v1.0 and Implementation Blueprint v1.0.
+- **Acceptance Criteria:**
+  - Folders `apps/api/`, `apps/worker/`, `apps/web/`, `packages/scanner/`, `infra/docker/` are created with placeholder `.gitkeep` or initial README files.
+  - No broken or orphan directories exist.
+- **Priority:** P0 | **Status:** NOT STARTED
+
+### QF-004: Create Docker Compose for local PostgreSQL 16 and Redis 7
+- **Description:** Provide a production-aligned Docker Compose file for spinning up local dependencies required by FastAPI and Celery.
+- **Acceptance Criteria:**
+  - `docker compose -f infra/docker/docker-compose.yml up` starts PostgreSQL 16 on port 5432 and Redis 7 on port 6379.
+  - Named volumes are configured for local persistence across restarts.
+  - Health checks are defined for both services.
+- **Priority:** P0 | **Status:** NOT STARTED
+
+### QF-022: Implement target validation filter and SSRF private IP blocker
+- **Description:** Implement a strict pre-connection network validator in `packages/scanner/safety/` to enforce deny-by-default egress.
+- **Acceptance Criteria:**
+  - Blocks all IPv4 private address ranges (RFC 1918), loopback, link-local, and AWS metadata (`169.254.169.254`).
+  - Blocks equivalent IPv6 private/multicast ranges.
+  - Unit tests verify rejection of forbidden targets.
+- **Priority:** P0 | **Status:** NOT STARTED
+
