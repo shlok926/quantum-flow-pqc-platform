@@ -77,12 +77,12 @@ describe("App Shell", () => {
     expect(screen.getByText("Target Discovery & Bounded TLS Inspection")).toBeInTheDocument();
     expect(screen.getByText("Register Domain Target")).toBeInTheDocument();
 
-    // 2. Navigate to future planned module (Stage 3: Prioritise)
-    const prioritiseNavButton = screen.getByText("3. Prioritise (QVI)");
-    await userEvent.click(prioritiseNavButton);
+    // 2. Navigate to future planned module (Stage 4: Plan & Roadmap)
+    const planNavButton = screen.getByText("4. Plan & Roadmap");
+    await userEvent.click(planNavButton);
 
     expect(screen.getByText("Module Scheduled for Upcoming Sprint")).toBeInTheDocument();
-    expect(screen.getByText("PRIORITISE")).toBeInTheDocument();
+    expect(screen.getByText("PLAN")).toBeInTheDocument();
 
     // 3. Return to diagnostics
     const returnBtn = screen.getByRole("button", { name: /return to system diagnostics/i });

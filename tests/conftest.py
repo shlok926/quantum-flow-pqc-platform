@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import (
     async_sessionmaker,
     create_async_engine,
 )
+from sqlalchemy.pool import StaticPool
 
 import services.api.app.db.models  # noqa: F401
 from services.api.app.db.base import Base
@@ -29,7 +30,12 @@ def anyio_backend() -> str:
 @pytest.fixture
 async def test_db_session() -> AsyncGenerator[AsyncSession, None]:
     """Provide an isolated, transactional in-memory database session for testing."""
-    engine = create_async_engine(TEST_DATABASE_URL, echo=False)
+    engine = create_async_engine(
+        TEST_DATABASE_URL,
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool,
+        echo=False,
+    )
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
