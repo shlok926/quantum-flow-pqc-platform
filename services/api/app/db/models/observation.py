@@ -27,9 +27,9 @@ class Observation(Base, TimestampMixin):
         primary_key=True,
         default=uuid.uuid4,
     )
-    target_id: Mapped[uuid.UUID] = mapped_column(
+    target_id: Mapped[uuid.UUID | None] = mapped_column(
         ForeignKey("targets.id", ondelete="CASCADE"),
-        nullable=False,
+        nullable=True,
         index=True,
     )
     scan_id: Mapped[uuid.UUID | None] = mapped_column(
