@@ -62,7 +62,8 @@ ENV/
 env/
 env.bak/
 venv.bak/
-.python-version
+# .python-version (unignored for cloud deployment runtime pinning)
+!.python-version
 
 # Python profiling and runtime
 .mypy_cache/
