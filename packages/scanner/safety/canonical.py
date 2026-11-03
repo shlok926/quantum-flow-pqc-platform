@@ -53,3 +53,29 @@ def verify_evidence_integrity(payload: dict[str, Any], stored_sha256: str) -> bo
 
     computed = compute_canonical_evidence_sha256(payload)
     return hmac.compare_digest(computed, stored_sha256.strip().lower())
+
+
+def compute_canonical_scope_hash(
+    target_id: str | None,
+    discovery_sources: list[str],
+    port: int | None = None,
+    repo_locator: str | None = None,
+    repo_ref: str | None = None,
+    config_type: str | None = None,
+    extra_params: dict[str, Any] | None = None,
+) -> str:
+    """Compute deterministic SHA-256 digest of assessment scope parameters.
+
+    Ensures that active assessments for identical targets and configurations
+    are detected and deduplicated via database partial unique index.
+    """
+    payload: dict[str, Any] = {
+        "target_id": str(target_id) if target_id else None,
+        "discovery_sources": sorted(discovery_sources),
+        "port": port,
+        "repo_locator": repo_locator,
+        "repo_ref": repo_ref,
+        "config_type": config_type,
+        "extra_params": extra_params or {},
+    }
+    return compute_canonical_evidence_sha256(payload)

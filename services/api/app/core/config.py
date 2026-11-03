@@ -72,8 +72,16 @@ class Settings(BaseSettings):
         description="Synchronous connection URL for Alembic migrations and tooling",
     )
     redis_url: str = Field(
-        default="redis://localhost:6379/0",
+        default="redis://127.0.0.1:6379/0",
         description="Connection URL for Redis task broker and caching",
+    )
+    staging_dir: str = Field(
+        default="./staging_data",
+        description="Path to staged archive storage volume",
+    )
+    scratch_dir: str = Field(
+        default="./scratch",
+        description="Path to isolated worker scratch directory",
     )
 
     # Security & Access Controls

@@ -3,7 +3,7 @@
 from datetime import datetime
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
 class TargetCreate(BaseModel):
@@ -24,8 +24,12 @@ class TargetCreate(BaseModel):
         description="Optional description or operational context",
     )
     authorisation_declared: bool = Field(
-        ...,
+        default=False,
         description="Explicit declaration that user has authorized permission to scan this domain",
+    )
+    explicit_authorisation_confirmed: bool | None = Field(
+        default=None,
+        description="Alias for authorisation_declared for frontend compatibility",
     )
     authorised_by: str | None = Field(
         default=None,
@@ -37,6 +41,22 @@ class TargetCreate(BaseModel):
         max_length=255,
         description="Ticket ID, compliance reference, or authorization document identifier",
     )
+    environment: str | None = Field(
+        default=None,
+        description="Optional deployment environment",
+    )
+    criticality: str | None = Field(
+        default=None,
+        description="Optional asset criticality",
+    )
+
+    @model_validator(mode="after")
+    def sync_authorisation(self) -> "TargetCreate":
+        if self.explicit_authorisation_confirmed is not None:
+            self.authorisation_declared = (
+                self.authorisation_declared or self.explicit_authorisation_confirmed
+            )
+        return self
 
 
 class TargetUpdate(BaseModel):

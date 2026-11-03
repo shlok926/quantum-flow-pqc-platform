@@ -60,6 +60,10 @@ services:
       REDIS_URL: redis://redis:6379/0
       CORS_ORIGINS: "http://localhost:3000,http://127.0.0.1:3000,http://localhost:5173,http://127.0.0.1:5173"
       ALLOW_TEST_TARGETS_ONLY: "true"
+      STAGING_DIR: /var/lib/quantumflow/staging
+      SCRATCH_DIR: /var/lib/quantumflow/scratch
+    volumes:
+      - staging_data:/var/lib/quantumflow/staging
     ports:
       - "127.0.0.1:8000:8000"
     depends_on:
@@ -93,6 +97,10 @@ services:
       DATABASE_URL_SYNC: postgresql://${POSTGRES_USER:-quantumflow}:${POSTGRES_PASSWORD:-quantumflow_secret_dev}@postgres:5432/${POSTGRES_DB:-quantumflow_db}
       REDIS_URL: redis://redis:6379/0
       ALLOW_TEST_TARGETS_ONLY: "true"
+      STAGING_DIR: /var/lib/quantumflow/staging
+      SCRATCH_DIR: /var/lib/quantumflow/scratch
+    volumes:
+      - staging_data:/var/lib/quantumflow/staging
     depends_on:
       postgres:
         condition: service_healthy
@@ -133,4 +141,6 @@ volumes:
   postgres_data:
     driver: local
   redis_data:
+    driver: local
+  staging_data:
     driver: local

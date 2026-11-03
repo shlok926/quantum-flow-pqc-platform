@@ -128,10 +128,10 @@ export const HealthWidget: React.FC = () => {
             <span className="qf-card-title">FastAPI Control Plane</span>
             <span
               className={`qf-status-badge ${
-                live?.status === "healthy" ? "badge-healthy" : "badge-offline"
+                live?.status === "healthy" || live?.status === "alive" ? "badge-healthy" : "badge-offline"
               }`}
             >
-              {live?.status === "healthy" ? "Healthy" : "Offline"}
+              {live?.status === "healthy" || live?.status === "alive" ? "Healthy" : "Offline"}
             </span>
           </div>
           <div className="qf-card-body">

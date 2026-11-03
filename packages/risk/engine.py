@@ -129,7 +129,11 @@ class QuantumRiskEngine:
             rating_b = 1
 
         # D6: Dependency and migration complexity (M)
-        dep_count = len(getattr(asset, "outgoing_relationships", []) or [])
+        dep_count = 0
+        if "outgoing_relationships" in getattr(asset, "__dict__", {}):
+            dep_count = len(getattr(asset, "outgoing_relationships", []) or [])
+        elif hasattr(asset, "parameters") and isinstance(asset.parameters, dict):
+            dep_count = int(asset.parameters.get("dependent_count", 0))
         if dep_count >= 5:
             rating_m = 4
         elif dep_count >= 2:

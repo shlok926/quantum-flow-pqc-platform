@@ -30,6 +30,7 @@ class JobService:
         job_type: str,
         input_params: dict[str, Any],
         target_id: uuid.UUID | None = None,
+        assessment_id: uuid.UUID | None = None,
         timeout_seconds: int = 300,
         max_retries: int = 3,
     ) -> DiscoveryJob:
@@ -44,6 +45,8 @@ class JobService:
         )
         if target_id is not None:
             stmt = stmt.where(DiscoveryJob.target_id == target_id)
+        if assessment_id is not None:
+            stmt = stmt.where(DiscoveryJob.assessment_id == assessment_id)
 
         result = await db.execute(stmt)
         active_jobs = result.scalars().all()
@@ -57,6 +60,7 @@ class JobService:
         job = DiscoveryJob(
             job_type=job_type,
             target_id=target_id,
+            assessment_id=assessment_id,
             input_params=input_params,
             timeout_seconds=timeout_seconds,
             max_retries=max_retries,

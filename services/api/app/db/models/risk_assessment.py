@@ -9,7 +9,16 @@ import uuid
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Any
 
-from sqlalchemy import CheckConstraint, DateTime, ForeignKey, Index, Integer, String, Text
+from sqlalchemy import (
+    CheckConstraint,
+    DateTime,
+    ForeignKey,
+    Index,
+    Integer,
+    String,
+    Text,
+    UniqueConstraint,
+)
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.types import JSON
@@ -17,6 +26,7 @@ from sqlalchemy.types import JSON
 from services.api.app.db.base import Base, TimestampMixin
 
 if TYPE_CHECKING:
+    from services.api.app.db.models.assessment import Assessment
     from services.api.app.db.models.cryptographic_asset import CryptographicAsset
     from services.api.app.db.models.recommendation import Recommendation
     from services.api.app.db.models.risk_factor import RiskFactor
@@ -54,13 +64,26 @@ class RiskAssessment(Base, TimestampMixin):
             "score IS NULL OR (score >= 0 AND score <= 1000)",
             name="chk_risk_score_range",
         ),
+        UniqueConstraint("assessment_id", "asset_id", name="uq_risk_assessment_run_asset"),
+        UniqueConstraint(
+            "id", "assessment_id", "asset_id", name="uq_risk_assessments_id_assessment_asset"
+        ),
+        UniqueConstraint(
+            "id", "assessment_id", "asset_id", name="uq_risk_assessments_id_assessment_asset"
+        ),
         Index("ix_risk_assessments_asset_id", "asset_id"),
+        Index("ix_risk_assessments_assessment_id", "assessment_id"),
         Index("ix_risk_assessments_risk_category", "risk_category"),
     )
 
     id: Mapped[uuid.UUID] = mapped_column(
         primary_key=True,
         default=uuid.uuid4,
+    )
+    assessment_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("assessments.id", ondelete="CASCADE"),
+        nullable=True,
+        doc="Links this risk assessment evaluation to a specific enterprise assessment run",
     )
     asset_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("cryptographic_assets.id", ondelete="CASCADE"),
@@ -137,6 +160,10 @@ class RiskAssessment(Base, TimestampMixin):
     )
 
     # Relationships
+    assessment: Mapped["Assessment | None"] = relationship(
+        "Assessment",
+        back_populates="risk_assessments",
+    )
     asset: Mapped["CryptographicAsset"] = relationship(
         "CryptographicAsset",
         back_populates="risk_assessments",

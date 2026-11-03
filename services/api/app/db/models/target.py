@@ -11,6 +11,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from services.api.app.db.base import Base, TimestampMixin
 
 if TYPE_CHECKING:
+    from services.api.app.db.models.assessment import Assessment
     from services.api.app.db.models.observation import Observation
     from services.api.app.db.models.scan import Scan
 
@@ -96,6 +97,10 @@ class Target(Base, TimestampMixin):
         back_populates="target",
         cascade="all, delete-orphan",
         order_by="desc(Scan.created_at)",
+    )
+    assessments: Mapped[list["Assessment"]] = relationship(
+        "Assessment",
+        back_populates="target",
     )
     observations: Mapped[list["Observation"]] = relationship(
         "Observation",

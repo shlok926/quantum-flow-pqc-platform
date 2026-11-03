@@ -144,10 +144,12 @@ class BoundedTLSCollector:
         resolver: SafeDestinationResolver,
         collector_version: str = "1.0.0",
         connect_timeout_seconds: float = 8.0,
+        allow_unverified_certificates: bool = False,
     ) -> None:
         self.resolver = resolver
         self.collector_version = collector_version
         self.connect_timeout_seconds = connect_timeout_seconds
+        self.allow_unverified_certificates = allow_unverified_certificates
 
     def inspect_target(self, hostname: str) -> TLSCollectionResult:
         """Execute destination-validated TLS inspection against hostname on port 443."""
@@ -259,6 +261,46 @@ class BoundedTLSCollector:
             )
 
         except ssl.SSLCertVerificationError as exc:
+            if self.allow_unverified_certificates:
+                with contextlib.suppress(Exception):
+                    fallback_ctx = ssl.create_default_context()
+                    fallback_ctx.check_hostname = False
+                    fallback_ctx.verify_mode = ssl.CERT_NONE
+                    fallback_sock = socket.socket(family, socket.SOCK_STREAM)
+                    fallback_sock.settimeout(self.connect_timeout_seconds)
+                    fallback_sock.connect((pinned_ip, 443))
+                    ssl_fallback = fallback_ctx.wrap_socket(
+                        fallback_sock,
+                        server_hostname=hostname,
+                        do_handshake_on_connect=True,
+                    )
+                    proto = ssl_fallback.version()
+                    c_info = ssl_fallback.cipher()
+                    der = ssl_fallback.getpeercert(binary_form=True)
+                    if der:
+                        cert_ev = extract_certificate_evidence(der)
+                        endpoint_ev = TLSEndpointEvidence(
+                            target_hostname=hostname,
+                            target_ip=pinned_ip,
+                            port=443,
+                            scan_timestamp=scan_time,
+                            collector_version=self.collector_version,
+                            connection_status="connected_unverified_cert",
+                            negotiated_protocol=proto,
+                            negotiated_cipher_name=c_info[0] if c_info else None,
+                            negotiated_cipher_bits=c_info[2] if c_info else None,
+                            negotiated_alpn=ssl_fallback.selected_alpn_protocol(),
+                            key_exchange_group=None,
+                            key_exchange_status="unobserved",
+                        )
+                        return TLSCollectionResult(
+                            success=True,
+                            target_hostname=hostname,
+                            pinned_ip=pinned_ip,
+                            endpoint_evidence=endpoint_ev,
+                            certificate_evidence=cert_ev,
+                        )
+
             return TLSCollectionResult(
                 success=False,
                 target_hostname=hostname,

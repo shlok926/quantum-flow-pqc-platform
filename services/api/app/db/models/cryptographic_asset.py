@@ -17,6 +17,7 @@ from sqlalchemy.types import JSON
 from services.api.app.db.base import Base, TimestampMixin
 
 if TYPE_CHECKING:
+    from services.api.app.db.models.assessment_asset import AssessmentAsset
     from services.api.app.db.models.asset_observation import AssetObservation
     from services.api.app.db.models.asset_relationship import AssetRelationship
     from services.api.app.db.models.risk_assessment import RiskAssessment
@@ -179,4 +180,9 @@ class CryptographicAsset(Base, TimestampMixin):
         back_populates="asset",
         cascade="all, delete-orphan",
         lazy="selectin",
+    )
+    assessment_associations: Mapped[list["AssessmentAsset"]] = relationship(
+        "AssessmentAsset",
+        back_populates="asset",
+        passive_deletes=True,
     )

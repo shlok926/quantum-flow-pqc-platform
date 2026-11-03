@@ -60,6 +60,7 @@ export interface TargetCreate {
   criticality?: TargetCriticality;
   description?: string | null;
   explicit_authorisation_confirmed: boolean;
+  authorisation_declared?: boolean;
 }
 
 export interface TargetVerifyResponse {
@@ -240,3 +241,117 @@ export interface DiscoveryJobListResponse {
   limit: number;
 }
 
+
+/**
+ * Sprint 3 Step 4: Unified Assessment Types (Mapping 1:1 to FastAPI backend schemas)
+ */
+export type AssessmentStatus = "queued" | "running" | "completed" | "failed" | "cancelled";
+
+export type AssessmentStage =
+  | "QUEUED"
+  | "DISCOVERY"
+  | "CBOM_INGESTION"
+  | "RISK_ASSESSMENT"
+  | "REPORT_FROZEN"
+  | "COMPLETED";
+
+export interface AssessmentCreateRequest {
+  title: string;
+  target_id?: string | null;
+  discovery_sources?: string[];
+  input_payload?: Record<string, unknown>;
+  upload_token?: string | null;
+  extra_params?: Record<string, unknown>;
+}
+
+export interface AssessmentCancelRequest {
+  reason: string;
+}
+
+export interface AssessmentResponse {
+  id: string;
+  title: string;
+  target_id: string | null;
+  target_snapshot: Record<string, unknown>;
+  scope_hash: string;
+  status: AssessmentStatus;
+  progress_stage: AssessmentStage;
+  progress_percent: number;
+  discovery_sources: string[];
+  collector_results: Record<string, unknown>;
+  coverage_summary: Record<string, unknown>;
+  asset_counts: Record<string, unknown>;
+  risk_summary: Record<string, unknown>;
+  error_summary: string | null;
+  report_snapshot_hash: string | null;
+  methodology_version: string;
+  engine_version: string;
+  retry_count: number;
+  max_retries: number;
+  started_at: string | null;
+  completed_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface AssessmentListResponse {
+  items: AssessmentResponse[];
+  total: number;
+  limit: number;
+  offset: number;
+}
+
+export interface AssessmentReportResponse {
+  assessment_id: string;
+  status: string;
+  methodology_version: string;
+  engine_version: string;
+  report_snapshot: Record<string, unknown>;
+  report_snapshot_hash: string;
+  is_hash_verified: boolean;
+  is_immutable: boolean;
+  completed_at: string | null;
+}
+
+export interface AssessmentJobSummary {
+  id: string;
+  job_type: string;
+  status: string;
+  progress_percent: number;
+  worker_id: string | null;
+  lease_expires_at: string | null;
+  retry_count: number;
+  error_message: string | null;
+  result_summary: Record<string, unknown> | null;
+  started_at: string | null;
+  completed_at: string | null;
+  created_at: string;
+}
+
+export interface AssessmentJobListResponse {
+  assessment_id: string;
+  total_jobs: number;
+  jobs: AssessmentJobSummary[];
+}
+
+export interface StagedUploadResponse {
+  upload_token: string;
+  filename: string;
+  byte_size: number;
+  sha256: string;
+  status: string;
+  uploaded_at: string;
+}
+
+export interface UploadTokenMetadata {
+  upload_token: string;
+  tenant_id: string;
+  filename: string;
+  byte_size: number;
+  sha256: string;
+  content_type: string;
+  status: string;
+  uploaded_at: string;
+  assessment_id: string | null;
+  retry_count: number;
+}

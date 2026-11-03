@@ -14,6 +14,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
+from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 from services.api.app.api.v1.endpoints.health import router as health_router
 from services.api.app.api.v1.router import api_v1_router
@@ -61,6 +62,100 @@ app = FastAPI(
     openapi_url="/openapi.json",
 )
 
+
+# ------------------------------------------------------------------------------
+# Request Body Ceiling Middleware (Rejects oversized bodies before multipart spooling)
+# ------------------------------------------------------------------------------
+class RequestBodyLimitMiddleware:
+    """Enforces global request body size ceiling prior to multipart form parsing."""
+
+    def __init__(self, app: ASGIApp, max_bytes: int = 25 * 1024 * 1024) -> None:
+        self.app = app
+        self.max_bytes = max_bytes
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        if scope["type"] != "http":
+            await self.app(scope, receive, send)
+            return
+
+        # 1. Content-Length Header Validation
+        content_length_header = None
+        for key, value in scope.get("headers", []):
+            if key.lower() == b"content-length":
+                content_length_header = value
+                break
+
+        if content_length_header:
+            try:
+                content_length = int(content_length_header.decode("latin1"))
+                if content_length > self.max_bytes:
+                    response = JSONResponse(
+                        status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+                        content={
+                            "detail": f"Request body exceeds {self.max_bytes // (1024 * 1024)}MB ceiling."
+                        },
+                    )
+                    await response(scope, receive, send)
+                    return
+            except ValueError:
+                pass
+
+        # 2. Chunked Transfer Bounding Wrapper
+        bytes_received = 0
+        limit_exceeded = False
+        response_started = False
+
+        async def limited_receive() -> Message:
+            nonlocal bytes_received, limit_exceeded
+            message = await receive()
+            if message["type"] == "http.request":
+                body = message.get("body", b"")
+                bytes_received += len(body)
+                if bytes_received > self.max_bytes:
+                    limit_exceeded = True
+                    raise StarletteHTTPException(
+                        status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+                        detail=f"Chunked request body exceeds {self.max_bytes // (1024 * 1024)}MB ceiling.",
+                    )
+            return message
+
+        async def limited_send(message: Message) -> None:
+            nonlocal response_started
+            if limit_exceeded:
+                if not response_started:
+                    response_started = True
+                    response = JSONResponse(
+                        status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+                        content={
+                            "detail": f"Chunked request body exceeds {self.max_bytes // (1024 * 1024)}MB ceiling."
+                        },
+                    )
+                    await response(scope, receive, send)
+                return
+            await send(message)
+
+        try:
+            await self.app(scope, limited_receive, limited_send)
+        except Exception as exc:
+            if limit_exceeded or (
+                isinstance(exc, StarletteHTTPException)
+                and exc.status_code == status.HTTP_413_REQUEST_ENTITY_TOO_LARGE
+            ):
+                if not response_started:
+                    response = JSONResponse(
+                        status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+                        content={
+                            "detail": f"Chunked request body exceeds {self.max_bytes // (1024 * 1024)}MB ceiling."
+                        },
+                    )
+                    await response(scope, receive, send)
+            else:
+                raise
+
+
+app.add_middleware(RequestBodyLimitMiddleware, max_bytes=25 * 1024 * 1024)
+
+
 # ------------------------------------------------------------------------------
 # CORS Middleware Configuration (Derived from Environment, Never Wildcard in Prod)
 # ------------------------------------------------------------------------------
@@ -102,6 +197,7 @@ async def http_exception_handler(request: Request, exc: StarletteHTTPException) 
     message = detail if isinstance(detail, str) else "An HTTP error occurred."
     details = None if isinstance(detail, str) else detail
 
+    headers = getattr(exc, "headers", None)
     return JSONResponse(
         status_code=exc.status_code,
         content={
@@ -112,6 +208,7 @@ async def http_exception_handler(request: Request, exc: StarletteHTTPException) 
                 "details": details,
             },
         },
+        headers=headers,
     )
 
 

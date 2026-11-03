@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   ShieldAlert,
   Terminal,
@@ -8,22 +8,74 @@ import {
   Layers,
   CheckCircle,
   FileText,
+  Plus,
+  ShieldCheck,
+  ArrowRight,
 } from "lucide-react";
 import { HealthWidget } from "../health/HealthWidget";
+import { AssessmentResponse } from "../../types";
+import { listAssessments } from "../../services/api";
+import { Button } from "../../components/common/Button";
+import { Badge } from "../../components/common/Badge";
+import { Card } from "../../components/common/Card";
 
-export const DashboardOverview: React.FC = () => {
+interface DashboardOverviewProps {
+  onNewAssessment?: () => void;
+  onSelectAssessment?: (id: string, stage: string) => void;
+}
+
+export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
+  onNewAssessment,
+  onSelectAssessment,
+}) => {
+  const [recentAssessments, setRecentAssessments] = useState<AssessmentResponse[]>([]);
+
+  useEffect(() => {
+    let mounted = true;
+    async function fetchRecent() {
+      try {
+        const res = await listAssessments({ limit: 4 });
+        if (mounted) {
+          setRecentAssessments(res.items || []);
+        }
+      } catch {
+        // Fallback silently if offline or initial load
+      }
+    }
+    fetchRecent();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
   return (
     <div className="qf-dashboard">
+      {/* Enterprise Executive Banner */}
       <div className="qf-welcome-card">
-        <div className="qf-welcome-header">
-          <div className="qf-welcome-tag">Sprint 0 Implementation Complete</div>
-          <h2>Post-Quantum Cryptography Control Plane</h2>
-          <p>
-            The engineering foundation for Quantum Flow Technologies is established.
-            The modular monolith architecture, typed settings, dual liveness/readiness probes,
-            asynchronous database and cache layers, and frontend interface are active.
-          </p>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "1rem" }}>
+          <div className="qf-welcome-header" style={{ maxWidth: "720px" }}>
+            <div className="qf-welcome-tag">Sprint 0 Implementation Complete</div>
+            <h2>Post-Quantum Cryptography Control Plane</h2>
+            <p>
+              The engineering foundation for Quantum Flow Technologies is established.
+              The modular monolith architecture, typed settings, dual liveness/readiness probes,
+              asynchronous database and cache layers, and frontend interface are active.
+            </p>
+          </div>
+          {onNewAssessment && (
+            <div style={{ alignSelf: "center" }}>
+              <Button
+                variant="primary"
+                size="md"
+                onClick={onNewAssessment}
+                icon={<Plus size={15} />}
+              >
+                Launch Assessment
+              </Button>
+            </div>
+          )}
         </div>
+
         <div className="qf-status-pill-row">
           <span className="qf-pill qf-pill-ok">
             <CheckCircle size={14} /> Modular Monolith Active
@@ -40,12 +92,86 @@ export const DashboardOverview: React.FC = () => {
         </div>
       </div>
 
+      {/* Quick Launch & Recent Assessments Strip */}
+      {recentAssessments.length > 0 && (
+        <div>
+          <div className="qf-section-title" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+              <ShieldCheck size={18} style={{ color: "var(--olive-primary)" }} />
+              <h3>Recent Cryptographic Assessments</h3>
+            </div>
+          </div>
+
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
+              gap: "1rem",
+              marginTop: "0.75rem",
+            }}
+          >
+            {recentAssessments.map((a) => {
+              const target = (a.target_snapshot?.hostname as string) || "General Scope";
+              const score = Number(a.risk_summary?.max_asset_qvi ?? a.risk_summary?.qvi_score ?? a.risk_summary?.overall_score ?? -1);
+              return (
+                <Card
+                  key={a.id}
+                  style={{
+                    padding: "1rem",
+                    cursor: onSelectAssessment ? "pointer" : "default",
+                    display: "flex",
+                    flexDirection: "column",
+                    justifyContent: "space-between",
+                    gap: "0.75rem",
+                  }}
+                  onClick={() => onSelectAssessment && onSelectAssessment(a.id, a.progress_stage)}
+                >
+                  <div>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.4rem" }}>
+                      <Badge variant={a.status === "completed" ? "low" : a.status === "failed" ? "critical" : "inferred"}>
+                        {a.status}
+                      </Badge>
+                      {score >= 0 && (
+                        <span
+                          style={{
+                            fontWeight: 700,
+                            fontSize: "0.85rem",
+                            color: score >= 600 ? "var(--rose-primary)" : score >= 400 ? "#D97706" : "var(--olive-primary)",
+                          }}
+                        >
+                          QVI {score}
+                        </span>
+                      )}
+                    </div>
+                    <div style={{ fontWeight: 600, fontSize: "0.9rem", color: "var(--text-primary)" }}>
+                      {a.title}
+                    </div>
+                    <div className="font-mono" style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginTop: "0.2rem" }}>
+                      {target}
+                    </div>
+                  </div>
+
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.75rem", color: "var(--text-secondary)" }}>
+                    <span>{new Date(a.created_at).toLocaleDateString()}</span>
+                    <span style={{ color: "var(--olive-primary)", fontWeight: 500, display: "flex", alignItems: "center", gap: "0.2rem" }}>
+                      Inspect <ArrowRight size={12} />
+                    </span>
+                  </div>
+                </Card>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Health Probes & Platform Diagnostics */}
       <div className="qf-section-title">
         <Terminal size={18} />
         <h3>System Diagnostics & Real-Time Probes</h3>
       </div>
       <HealthWidget />
 
+      {/* Foundational Architecture Subsystems */}
       <div className="qf-section-title">
         <Layers size={18} />
         <h3>Foundational Architecture Subsystems</h3>
@@ -129,4 +255,3 @@ export const DashboardOverview: React.FC = () => {
     </div>
   );
 };
-

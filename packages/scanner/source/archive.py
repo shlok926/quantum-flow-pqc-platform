@@ -5,7 +5,6 @@ Zip Bombs (decompression multiplication), symlink escaping, and resource exhaust
 """
 
 import logging
-import shutil
 import tarfile
 import zipfile
 from pathlib import Path
@@ -101,6 +100,8 @@ def extract_archive_safely(
     extracted_files: list[Path] = []
     total_extracted_bytes = 0
     target_dir = target_dir.resolve()
+    seen_paths_lower: set[str] = set()
+    chunk_size = 64 * 1024
 
     if not archive_path.exists():
         raise ArchiveSecurityError(f"Archive file not found: {archive_path}")
@@ -122,12 +123,27 @@ def extract_archive_safely(
                 )
 
             for member in infolist:
-                # Reject directory traversal (Zip Slip)
-                normalized_name = member.filename.replace("\\", "/")
+                # Reject directory traversal (Zip Slip) and drive letters
+                raw_name = member.filename
+                if (len(raw_name) > 1 and raw_name[1] == ":") or raw_name.startswith(("/", "\\")):
+                    raise ArchiveSecurityError(
+                        f"Illegal path traversal detected in archive entry: {raw_name}"
+                    )
+
+                normalized_name = raw_name.replace("\\", "/")
                 if normalized_name.startswith("/") or ".." in normalized_name.split("/"):
                     raise ArchiveSecurityError(
-                        f"Illegal path traversal detected in archive entry: {member.filename}"
+                        f"Illegal path traversal detected in archive entry: {raw_name}"
                     )
+
+                # Check colliding case-insensitive paths
+                norm_lower = normalized_name.lower().rstrip("/")
+                if norm_lower:
+                    if norm_lower in seen_paths_lower and not member.is_dir():
+                        raise ArchiveSecurityError(
+                            f"Colliding path detected in archive: {raw_name}"
+                        )
+                    seen_paths_lower.add(norm_lower)
 
                 # Reject symlinks in zip archives
                 if (member.external_attr >> 16) & 0o170000 == 0o120000:
@@ -139,10 +155,6 @@ def extract_archive_safely(
                 if file_ext in NESTED_ARCHIVE_EXTENSIONS:
                     logger.warning("Skipping nested archive in zip upload: %s", member.filename)
                     continue
-
-                # Reject uncompressed size exceeding limits (Zip Bomb early check)
-                if member.file_size > MAX_SINGLE_FILE_BYTES:
-                    continue  # Safely skip oversized file
 
                 destination = (target_dir / member.filename).resolve()
                 if not destination.is_relative_to(target_dir):
@@ -164,15 +176,29 @@ def extract_archive_safely(
                     )
                     continue
 
-                total_extracted_bytes += member.file_size
-                if total_extracted_bytes > max_uncompressed_bytes:
-                    raise ArchiveSecurityError(
-                        "Archive exceeds maximum uncompressed size budget (Zip Bomb protection)"
-                    )
-
                 destination.parent.mkdir(parents=True, exist_ok=True)
+                single_file_bytes = 0
+
                 with zf.open(member) as source_file, open(destination, "wb") as dest_file:
-                    shutil.copyfileobj(source_file, dest_file)
+                    while True:
+                        chunk = source_file.read(chunk_size)
+                        if not chunk:
+                            break
+                        single_file_bytes += len(chunk)
+                        total_extracted_bytes += len(chunk)
+                        if single_file_bytes > MAX_SINGLE_FILE_BYTES:
+                            dest_file.close()
+                            destination.unlink(missing_ok=True)
+                            raise ArchiveSecurityError(
+                                f"Decompressed file '{member.filename}' exceeds single file limit"
+                            )
+                        if total_extracted_bytes > max_uncompressed_bytes:
+                            dest_file.close()
+                            destination.unlink(missing_ok=True)
+                            raise ArchiveSecurityError(
+                                "Archive exceeds maximum uncompressed size budget (Zip Bomb protection)"
+                            )
+                        dest_file.write(chunk)
 
                 # Post-extraction content sniffing: reject private keys
                 if _is_private_key_file(destination):
@@ -199,19 +225,26 @@ def extract_archive_safely(
                     logger.warning("Skipping symlink/hardlink in tar: %s", tar_member.name)
                     continue
 
-                normalized_name = tar_member.name.replace("\\", "/")
+                raw_name = tar_member.name
+                if (len(raw_name) > 1 and raw_name[1] == ":") or raw_name.startswith(("/", "\\")):
+                    raise ArchiveSecurityError(f"Illegal path traversal in tar member: {raw_name}")
+
+                normalized_name = raw_name.replace("\\", "/")
                 if normalized_name.startswith("/") or ".." in normalized_name.split("/"):
-                    raise ArchiveSecurityError(
-                        f"Illegal path traversal in tar member: {tar_member.name}"
-                    )
+                    raise ArchiveSecurityError(f"Illegal path traversal in tar member: {raw_name}")
+
+                norm_lower = normalized_name.lower().rstrip("/")
+                if norm_lower:
+                    if norm_lower in seen_paths_lower and not tar_member.isdir():
+                        raise ArchiveSecurityError(
+                            f"Colliding path detected in archive: {raw_name}"
+                        )
+                    seen_paths_lower.add(norm_lower)
 
                 # Skip nested archives
                 file_ext = Path(normalized_name).suffix.lower()
                 if file_ext in NESTED_ARCHIVE_EXTENSIONS:
                     logger.warning("Skipping nested archive in tar upload: %s", tar_member.name)
-                    continue
-
-                if tar_member.size > MAX_SINGLE_FILE_BYTES:
                     continue
 
                 destination = (target_dir / tar_member.name).resolve()
@@ -234,17 +267,30 @@ def extract_archive_safely(
                     )
                     continue
 
-                total_extracted_bytes += tar_member.size
-                if total_extracted_bytes > max_uncompressed_bytes:
-                    raise ArchiveSecurityError(
-                        "Archive exceeds maximum uncompressed size budget (Tar Bomb protection)"
-                    )
-
                 destination.parent.mkdir(parents=True, exist_ok=True)
                 tar_source_file = tf.extractfile(tar_member)
                 if tar_source_file is not None:
+                    single_file_bytes = 0
                     with open(destination, "wb") as dest_file:
-                        shutil.copyfileobj(tar_source_file, dest_file)
+                        while True:
+                            chunk = tar_source_file.read(chunk_size)
+                            if not chunk:
+                                break
+                            single_file_bytes += len(chunk)
+                            total_extracted_bytes += len(chunk)
+                            if single_file_bytes > MAX_SINGLE_FILE_BYTES:
+                                dest_file.close()
+                                destination.unlink(missing_ok=True)
+                                raise ArchiveSecurityError(
+                                    f"Decompressed file '{tar_member.name}' exceeds single file limit"
+                                )
+                            if total_extracted_bytes > max_uncompressed_bytes:
+                                dest_file.close()
+                                destination.unlink(missing_ok=True)
+                                raise ArchiveSecurityError(
+                                    "Archive exceeds maximum uncompressed size budget (Tar Bomb protection)"
+                                )
+                            dest_file.write(chunk)
 
                     # Post-extraction content sniffing: reject private keys
                     if _is_private_key_file(destination):

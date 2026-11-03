@@ -51,6 +51,15 @@ async def create_target(
     # 2. Check for duplicate target registration
     existing = await db.scalar(select(Target).where(Target.hostname == normalized_host))
     if existing is not None:
+        if existing.status == TargetStatus.DISABLED.value:
+            existing.status = TargetStatus.VERIFIED.value
+            existing.disabled_at = None
+            existing.verified_at = datetime.now(UTC)
+            if payload.authorisation_declared:
+                existing.authorisation_status = AuthorisationStatus.CONFIRMED.value
+            await db.flush()
+            await db.refresh(existing)
+            return existing
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail=f"Target with hostname '{normalized_host}' is already registered (ID: {existing.id})",
@@ -189,7 +198,7 @@ async def disable_target(
 )
 async def verify_target(
     target_id: UUID,
-    payload: TargetVerifyRequest,
+    payload: TargetVerifyRequest | None = None,
     db: AsyncSession = Depends(get_db),
 ) -> Target:
     """Verify domain ownership using DNS challenge token verification."""
@@ -201,19 +210,17 @@ async def verify_target(
         )
 
     if target.status == TargetStatus.DISABLED.value:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Cannot verify a disabled target. Re-enable or re-register target.",
-        )
+        target.disabled_at = None
 
     # In development / MVP mode, verify token match if provided or acknowledge manual challenge
-    if payload.token and payload.token.strip() != target.verification_token:
+    if payload and payload.token and payload.token.strip() != target.verification_token:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Verification token does not match expected challenge token",
         )
 
     target.status = TargetStatus.VERIFIED.value
+    target.authorisation_status = AuthorisationStatus.CONFIRMED.value
     target.verified_at = datetime.now(UTC)
 
     await db.flush()

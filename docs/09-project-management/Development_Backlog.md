@@ -97,6 +97,21 @@
 
 ---
 
+## 5. Sprint 3 — End-to-End Enterprise Assessment & Repeatable Demonstration
+
+### Sprint 3 Core Deliverables
+
+| Task ID | Task Title | Priority | Dependencies | Status |
+|---|---|---|---|---|
+| **QF-S3-01** | Assessment Database Models & Referential Integrity (Assessments, AssessmentAsset, AssessmentObservation, RESTRICT FKs, Composite Risk FK, Status/Progress CHECKs, Immutability Trigger) | Critical | QF-CBOM-01, QF-RISK-01 | VERIFIED (STEP 1 REMEDIATED) |
+| **QF-S3-02** | Assessment Orchestration Engine (`AssessmentOrchestrator`, lifecycle transitions, collector parallel dispatch, partial failure handling, cooperative cancellation, atomic progress) | Critical | QF-S3-01 | NOT STARTED (AWAITING AUTH) |
+| **QF-S3-03** | Assessment REST API Endpoints (`POST /api/v1/assessments`, `GET /api/v1/assessments`, `GET /{id}`, `POST /{id}/cancel`, `POST /{id}/retry`, `GET /{id}/coverage`) | High | QF-S3-02 | NOT STARTED |
+| **QF-S3-04** | Repeatable Demonstration Environment (Synthetic multi-source target fixture, pre-seeded observations, reproducible QVI evaluation) | High | QF-S3-03 | NOT STARTED |
+| **QF-S3-05** | Frontend Guided Assessment Workflow (Multi-source assessment creation wizard, live progress polling, findings summary view) | High | QF-S3-03 | NOT STARTED |
+| **QF-S3-06** | Immutable Assessment Reports & Multi-Format Exporters (JSON snapshot, CycloneDX 1.6 CBOM, formula-neutralized CSV, Executive PDF/Markdown) | High | QF-S3-02, QF-S3-03 | NOT STARTED |
+
+---
+
 ## 9. Sprint 7 — Security Hardening & Pilot Readiness
 
 | Task ID | Task Title | Priority | Dependencies | Status |

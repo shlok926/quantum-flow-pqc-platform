@@ -1,13 +1,14 @@
 import React from "react";
 import {
+  Activity,
+  Server,
   Radar,
   Layers,
   Flame,
   GitBranch,
-  KeyRound,
-  ShieldCheck,
-  Activity,
-  Server,
+  ShieldAlert,
+  PlusCircle,
+  Settings,
 } from "lucide-react";
 
 interface SidebarProps {
@@ -20,16 +21,23 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onSelectTab,
 }) => {
   const workflowStages = [
-    { id: "discover", label: "1. Discover", icon: Radar, status: "Sprint 1" },
-    { id: "inventory", label: "2. Inventory (CBOM)", icon: Layers, status: "Sprint 1" },
-    { id: "prioritise", label: "3. Prioritise (QVI)", icon: Flame, status: "Sprint 2" },
-    { id: "plan", label: "4. Plan & Roadmap", icon: GitBranch, status: "Sprint 3" },
-    { id: "migrate", label: "5. Migrate (PQC)", icon: KeyRound, status: "Sprint 4" },
-    { id: "assure", label: "6. Assure & Audit", icon: ShieldCheck, status: "Sprint 5" },
+    { id: "assessments", label: "Assessments", icon: ShieldAlert, badge: "Enterprise" },
+    { id: "assessments-new", label: "New Assessment", icon: PlusCircle },
+    { id: "discover", label: "1. Discover", icon: Radar, status: "Active" },
+    { id: "inventory", label: "2. Inventory (CBOM)", icon: Layers, status: "Active" },
+    { id: "prioritise", label: "3. Prioritise (QVI)", icon: Flame, status: "Active" },
+    { id: "plan", label: "4. Plan & Roadmap", icon: GitBranch, status: "Planned" },
   ];
+
+  const handleSelect = (id: string) => {
+    if (onSelectTab) {
+      onSelectTab(id);
+    }
+  };
 
   return (
     <nav className="qf-sidebar" aria-label="Workflow Navigation">
+      {/* Foundation & Diagnostics */}
       <div className="qf-sidebar-section">
         <div className="qf-sidebar-heading">Foundation & Diagnostics</div>
         <ul className="qf-nav-list">
@@ -37,7 +45,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <button
               type="button"
               className={`qf-nav-item ${activeTab === "diagnostics" ? "active" : ""}`}
-              onClick={() => onSelectTab && onSelectTab("diagnostics")}
+              onClick={() => handleSelect("diagnostics")}
+              style={{
+                backgroundColor: activeTab === "diagnostics" ? "var(--olive-light)" : "transparent",
+                color: activeTab === "diagnostics" ? "var(--olive-primary)" : "var(--text-secondary)",
+                fontWeight: activeTab === "diagnostics" ? 600 : 500,
+              }}
             >
               <Activity size={18} />
               <span>Platform Health</span>
@@ -48,7 +61,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <button
               type="button"
               className={`qf-nav-item ${activeTab === "architecture" ? "active" : ""}`}
-              onClick={() => onSelectTab && onSelectTab("architecture")}
+              onClick={() => handleSelect("architecture")}
+              style={{
+                backgroundColor: activeTab === "architecture" ? "var(--olive-light)" : "transparent",
+                color: activeTab === "architecture" ? "var(--olive-primary)" : "var(--text-secondary)",
+                fontWeight: activeTab === "architecture" ? 600 : 500,
+              }}
             >
               <Server size={18} />
               <span>Architecture Map</span>
@@ -57,6 +75,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </ul>
       </div>
 
+      {/* PQC Lifecycle Workflow */}
       <div className="qf-sidebar-section">
         <div className="qf-sidebar-heading">PQC Lifecycle Workflow</div>
         <ul className="qf-nav-list">
@@ -68,21 +87,66 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 <button
                   type="button"
                   className={`qf-nav-item ${isActive ? "active" : ""}`}
-                  onClick={() => onSelectTab && onSelectTab(stage.id)}
+                  onClick={() => handleSelect(stage.id)}
+                  style={{
+                    backgroundColor: isActive ? "var(--olive-light)" : "transparent",
+                    color: isActive ? "var(--olive-primary)" : "var(--text-secondary)",
+                    fontWeight: isActive ? 600 : 500,
+                  }}
                 >
-                  <Icon size={18} />
+                  <Icon size={18} style={{ color: isActive ? "var(--olive-primary)" : "inherit" }} />
                   <span>{stage.label}</span>
-                  <span
-                    className={`qf-nav-tag ${
-                      stage.status === "Sprint 1" ? "qf-nav-tag-live" : "qf-nav-tag-planned"
-                    }`}
-                  >
-                    {stage.status === "Sprint 1" ? "Active" : stage.status}
-                  </span>
+                  {stage.badge ? (
+                    <span
+                      style={{
+                        marginLeft: "auto",
+                        fontSize: "0.65rem",
+                        padding: "0.15rem 0.4rem",
+                        borderRadius: "4px",
+                        backgroundColor: "var(--olive-primary)",
+                        color: "#FFFFFF",
+                        fontWeight: 700,
+                      }}
+                    >
+                      {stage.badge}
+                    </span>
+                  ) : (
+                    stage.status && (
+                      <span
+                        className={`qf-nav-tag ${
+                          stage.status === "Active" ? "qf-nav-tag-live" : "qf-nav-tag-planned"
+                        }`}
+                      >
+                        {stage.status}
+                      </span>
+                    )
+                  )}
                 </button>
               </li>
             );
           })}
+        </ul>
+      </div>
+
+      {/* Administration & Governance */}
+      <div className="qf-sidebar-section">
+        <div className="qf-sidebar-heading">Governance & Policy</div>
+        <ul className="qf-nav-list">
+          <li>
+            <button
+              type="button"
+              className={`qf-nav-item ${activeTab === "settings" ? "active" : ""}`}
+              onClick={() => handleSelect("settings")}
+              style={{
+                backgroundColor: activeTab === "settings" ? "var(--olive-light)" : "transparent",
+                color: activeTab === "settings" ? "var(--olive-primary)" : "var(--text-secondary)",
+                fontWeight: activeTab === "settings" ? 600 : 500,
+              }}
+            >
+              <Settings size={18} />
+              <span>Platform Settings</span>
+            </button>
+          </li>
         </ul>
       </div>
     </nav>

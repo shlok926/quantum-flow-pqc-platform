@@ -1,5 +1,16 @@
 """Quantum Flow Technologies — API Schemas Package."""
 
+from services.api.app.schemas.assessment import (
+    AssessmentCancelRequest,
+    AssessmentCreateRequest,
+    AssessmentJobListResponse,
+    AssessmentJobSummary,
+    AssessmentListResponse,
+    AssessmentReportResponse,
+    AssessmentResponse,
+    StagedUploadResponse,
+    UploadTokenMetadata,
+)
 from services.api.app.schemas.asset import (
     AssetListResponse,
     AssetRelationshipResponse,
@@ -44,6 +55,15 @@ from services.api.app.schemas.target import (
 )
 
 __all__ = [
+    "AssessmentCancelRequest",
+    "AssessmentCreateRequest",
+    "AssessmentJobListResponse",
+    "AssessmentJobSummary",
+    "AssessmentListResponse",
+    "AssessmentReportResponse",
+    "AssessmentResponse",
+    "StagedUploadResponse",
+    "UploadTokenMetadata",
     "AssetListResponse",
     "AssetRelationshipResponse",
     "ConfigImportRequest",

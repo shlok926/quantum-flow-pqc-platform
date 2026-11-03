@@ -7,14 +7,17 @@ for asynchronous discovery and analysis jobs.
 import enum
 import uuid
 from datetime import UTC, datetime
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from sqlalchemy import DateTime, Integer, String, Text
+from sqlalchemy import DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.dialects.postgresql import JSONB
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.types import JSON
 
 from services.api.app.db.base import Base, TimestampMixin
+
+if TYPE_CHECKING:
+    from services.api.app.db.models.assessment import Assessment
 
 JSONType = JSON().with_variant(JSONB(), "postgresql")
 
@@ -60,6 +63,11 @@ class DiscoveryJob(Base, TimestampMixin):
         index=True,
     )
     target_id: Mapped[uuid.UUID | None] = mapped_column(
+        nullable=True,
+        index=True,
+    )
+    assessment_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("assessments.id", ondelete="SET NULL"),
         nullable=True,
         index=True,
     )
@@ -113,6 +121,12 @@ class DiscoveryJob(Base, TimestampMixin):
     completed_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True),
         nullable=True,
+    )
+
+    # Relationships
+    assessment: Mapped["Assessment | None"] = relationship(
+        "Assessment",
+        back_populates="discovery_jobs",
     )
 
     def is_active(self) -> bool:

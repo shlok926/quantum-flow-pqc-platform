@@ -1,5 +1,12 @@
 """Quantum Flow Technologies — Domain Entity Models Package."""
 
+from services.api.app.db.models.assessment import (
+    Assessment,
+    AssessmentStage,
+    AssessmentStatus,
+)
+from services.api.app.db.models.assessment_asset import AssessmentAsset
+from services.api.app.db.models.assessment_observation import AssessmentObservation
 from services.api.app.db.models.asset_observation import AssetObservation
 from services.api.app.db.models.asset_relationship import AssetRelationship
 from services.api.app.db.models.cryptographic_asset import (
@@ -33,6 +40,11 @@ from services.api.app.db.models.target import (
 )
 
 __all__ = [
+    "Assessment",
+    "AssessmentAsset",
+    "AssessmentObservation",
+    "AssessmentStage",
+    "AssessmentStatus",
     "AssetClassification",
     "AssetObservation",
     "AssetRelationship",

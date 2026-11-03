@@ -92,9 +92,7 @@ class DependencyScanner:
                 # Skip oversized manifest files to protect against DoS
                 try:
                     if file_path.stat().st_size > MAX_MANIFEST_BYTES:
-                        logger.warning(
-                            "Skipping oversized manifest file (>5MB): %s", rel_path
-                        )
+                        logger.warning("Skipping oversized manifest file (>5MB): %s", rel_path)
                         continue
                 except OSError:
                     continue

@@ -126,6 +126,7 @@ export const TargetManagement: React.FC = () => {
         criticality: regCriticality,
         description: regDescription.trim() || undefined,
         explicit_authorisation_confirmed: regAuthConfirmed,
+        authorisation_declared: regAuthConfirmed,
       });
 
       setShowAddModal(false);
@@ -136,7 +137,12 @@ export const TargetManagement: React.FC = () => {
       await loadTargets();
       setActiveChallengeTarget(newTarget);
     } catch (err) {
-      setRegError(err instanceof Error ? err.message : "Registration failed.");
+      const msg = err instanceof Error ? err.message : "Registration failed.";
+      if (msg.includes("already registered") || msg.includes("409")) {
+        setRegError("This domain is already registered. Open the existing target or continue with its available assessment.");
+      } else {
+        setRegError(msg);
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -147,7 +153,7 @@ export const TargetManagement: React.FC = () => {
       setIsVerifying(true);
       setErrorMessage(null);
       const result = await verifyTarget(target.id);
-      setSuccessMessage(result.message);
+      setSuccessMessage(result?.message || `Target '${target.hostname}' verified successfully.`);
       setActiveChallengeTarget(null);
       await loadTargets();
     } catch (err) {
