@@ -230,8 +230,23 @@ async def general_exception_handler(request: Request, exc: Exception) -> JSONRes
 
 
 # ------------------------------------------------------------------------------
-# Top-Level Health Probes (Required by Container Orchestrators & Monitoring)
+# Top-Level Root & Health Probes (Required by Container Orchestrators & Monitoring)
 # ------------------------------------------------------------------------------
+@app.get("/", tags=["Root"])
+@app.head("/", tags=["Root"])
+async def root_entrypoint() -> dict[str, Any]:
+    """Root entry point providing discovery and health metadata."""
+    return {
+        "name": settings.app_name,
+        "version": settings.app_version,
+        "environment": settings.app_env,
+        "status": "operational",
+        "docs_url": "/docs",
+        "health_url": "/health/live",
+        "api_v1": settings.api_v1_prefix,
+    }
+
+
 app.include_router(health_router)
 
 # ------------------------------------------------------------------------------

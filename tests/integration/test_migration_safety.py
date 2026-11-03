@@ -5,8 +5,10 @@ Sprint 1 (targets, scans, observations) and Sprint 2 (CBOM assets, standalone ri
 """
 
 import os
+import socket
 import uuid
 from collections.abc import Generator
+from urllib.parse import urlparse
 
 import pytest
 from alembic import command
@@ -48,6 +50,23 @@ def alembic_cfg() -> Config:
     cfg = Config("alembic.ini")
     cfg.set_main_option("sqlalchemy.url", PG_URL)
     return cfg
+
+
+def _is_db_reachable(url: str) -> bool:
+    try:
+        parsed = urlparse(url)
+        host = parsed.hostname or "127.0.0.1"
+        port = parsed.port or 5432
+        with socket.create_connection((host, port), timeout=0.5):
+            return True
+    except Exception:
+        return False
+
+
+@pytest.fixture(scope="module", autouse=True)
+def require_postgres() -> None:
+    if not _is_db_reachable(PG_URL):
+        pytest.skip("PostgreSQL 16 test database is not available on port 5434")
 
 
 @pytest.fixture(scope="module")

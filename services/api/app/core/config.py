@@ -39,6 +39,34 @@ def _parse_cors_origins(v: object) -> list[str]:
 CorsOriginsType = Annotated[Any, BeforeValidator(_parse_cors_origins)]
 
 
+def _normalize_database_url_async(v: object) -> str:
+    """Ensure database_url uses asyncpg driver prefix for async SQLAlchemy."""
+    url = str(v).strip()
+    if url.startswith("postgres://"):
+        return "postgresql+asyncpg://" + url[len("postgres://") :]
+    if url.startswith("postgresql://"):
+        return "postgresql+asyncpg://" + url[len("postgresql://") :]
+    if url.startswith("postgresql+psycopg2://"):
+        return "postgresql+asyncpg://" + url[len("postgresql+psycopg2://") :]
+    return url
+
+
+def _normalize_database_url_sync(v: object) -> str:
+    """Ensure database_url_sync uses psycopg2 driver prefix for synchronous Alembic/scripts."""
+    url = str(v).strip()
+    if url.startswith("postgres://"):
+        return "postgresql+psycopg2://" + url[len("postgres://") :]
+    if url.startswith("postgresql://"):
+        return "postgresql+psycopg2://" + url[len("postgresql://") :]
+    if url.startswith("postgresql+asyncpg://"):
+        return "postgresql+psycopg2://" + url[len("postgresql+asyncpg://") :]
+    return url
+
+
+DatabaseUrlAsyncType = Annotated[str, BeforeValidator(_normalize_database_url_async)]
+DatabaseUrlSyncType = Annotated[str, BeforeValidator(_normalize_database_url_sync)]
+
+
 class Settings(BaseSettings):
     """Application settings derived from environment variables."""
 
@@ -63,11 +91,11 @@ class Settings(BaseSettings):
     api_port: int = Field(default=8000, description="Listening TCP port for the API server")
 
     # Persistence & Caching
-    database_url: str = Field(
+    database_url: DatabaseUrlAsyncType = Field(
         default="postgresql+asyncpg://postgres:postgres@localhost:5432/quantum_flow_dev",
         description="Async connection URL for PostgreSQL database",
     )
-    database_url_sync: str = Field(
+    database_url_sync: DatabaseUrlSyncType = Field(
         default="postgresql+psycopg2://postgres:postgres@localhost:5432/quantum_flow_dev",
         description="Synchronous connection URL for Alembic migrations and tooling",
     )

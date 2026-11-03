@@ -18,6 +18,31 @@ jobs:
     name: Backend CI (Python / FastAPI)
     runs-on: ubuntu-latest
 
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: quantumflow
+          POSTGRES_PASSWORD: quantumflow_secret_dev
+          POSTGRES_DB: quantumflow_db
+        ports:
+          - 5434:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -43,7 +68,18 @@ jobs:
       - name: Run Mypy Static Type Analysis
         run: python -m mypy services packages tests
 
+      - name: Run Database Migrations
+        env:
+          DATABASE_URL_SYNC: postgresql+psycopg2://quantumflow:quantumflow_secret_dev@localhost:5434/quantumflow_db
+          DATABASE_URL: postgresql+asyncpg://quantumflow:quantumflow_secret_dev@localhost:5434/quantumflow_db
+        run: python -m alembic upgrade head
+
       - name: Run Pytest Test Suite
+        env:
+          DATABASE_URL_SYNC: postgresql+psycopg2://quantumflow:quantumflow_secret_dev@localhost:5434/quantumflow_db
+          DATABASE_URL_ASYNC: postgresql+asyncpg://quantumflow:quantumflow_secret_dev@localhost:5434/quantumflow_db
+          DATABASE_URL: postgresql+asyncpg://quantumflow:quantumflow_secret_dev@localhost:5434/quantumflow_db
+          REDIS_URL: redis://localhost:6379/0
         run: python -m pytest -v --tb=short
 
   frontend:

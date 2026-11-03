@@ -7,12 +7,14 @@ against a live PostgreSQL 16 database.
 
 import asyncio
 import os
+import socket
 import time
 import uuid
 from collections.abc import AsyncGenerator
 from datetime import UTC, datetime, timedelta
 from typing import Any, cast
 from unittest.mock import patch
+from urllib.parse import urlparse
 
 import pytest
 import pytest_asyncio
@@ -38,6 +40,23 @@ PG_ASYNC_URL = os.getenv(
     "DATABASE_URL_ASYNC",
     "postgresql+asyncpg://quantumflow:quantumflow_secret_dev@localhost:5434/quantumflow_db",
 )
+
+
+def _is_db_reachable(url: str) -> bool:
+    try:
+        parsed = urlparse(url)
+        host = parsed.hostname or "127.0.0.1"
+        port = parsed.port or 5432
+        with socket.create_connection((host, port), timeout=0.5):
+            return True
+    except Exception:
+        return False
+
+
+@pytest.fixture(scope="module", autouse=True)
+def require_postgres() -> None:
+    if not _is_db_reachable(PG_ASYNC_URL):
+        pytest.skip("PostgreSQL async test database is not available on port 5434")
 
 
 @pytest_asyncio.fixture
