@@ -139,7 +139,7 @@ class Settings(BaseSettings):
 
     # Engine & Catalogue Versions
     allow_test_targets_only: bool = Field(
-        default=True,
+        default=False,
         description="Strict safety flag restricting scans to RFC 5737 / RFC 3849 testnets",
     )
     collector_version: str = Field(

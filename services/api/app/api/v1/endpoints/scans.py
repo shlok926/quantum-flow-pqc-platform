@@ -101,6 +101,7 @@ async def create_scan(
     collector = BoundedTLSCollector(
         resolver=resolver,
         collector_version=collector_version,
+        allow_unverified_certificates=True,
     )
 
     # 5. Perform bounded TLS inspection offloaded from async event loop thread
