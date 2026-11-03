@@ -9,7 +9,11 @@
 # Ignore all actual local and production environment files
 .env
 .env.*
+*.env
+**/*.env
+docs/*.env
 !.env.example
+!docs/*.env.example
 
 # Credentials, tokens, keys and certificates
 *.pem

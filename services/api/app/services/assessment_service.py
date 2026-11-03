@@ -669,6 +669,7 @@ class AssessmentService:
                 selectinload(Assessment.risk_assessments),
             )
             .with_for_update()
+            .execution_options(populate_existing=True)
         )
         assessment = await db.scalar(lock_stmt)
         if assessment is None:
@@ -742,6 +743,7 @@ class AssessmentService:
                 selectinload(Assessment.risk_assessments),
             )
             .with_for_update()
+            .execution_options(populate_existing=True)
         )
         assessment = await db.scalar(lock_stmt)
         if assessment is None:
