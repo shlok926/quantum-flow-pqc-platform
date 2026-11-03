@@ -178,7 +178,7 @@ class PythonCryptoVisitor(ast.NodeVisitor):
                 if (
                     kw.arg == "key_size"
                     and isinstance(kw.value, ast.Constant)
-                    and isinstance(kw.value.value, (int, str))
+                    and isinstance(kw.value.value, int | str)
                 ):
                     key_size = int(kw.value.value)
             self.findings.append(
