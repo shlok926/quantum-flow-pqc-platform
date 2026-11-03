@@ -20,11 +20,18 @@ interface RouterProviderProps {
   initialPath?: string;
 }
 
+const normalizePath = (raw: string): string => {
+  if (!raw) return "/";
+  const [pathname] = raw.split("?");
+  const clean = pathname.split("#")[0].replace(/\/+$/, "");
+  return clean || "/";
+};
+
 export const RouterProvider: React.FC<RouterProviderProps> = ({ children, initialPath }) => {
   const [path, setPath] = useState<string>(() => {
-    if (initialPath) return initialPath;
+    if (initialPath) return normalizePath(initialPath);
     if (typeof window !== "undefined" && window.location) {
-      return window.location.pathname || "/";
+      return normalizePath(window.location.pathname);
     }
     return "/";
   });
@@ -33,7 +40,7 @@ export const RouterProvider: React.FC<RouterProviderProps> = ({ children, initia
     if (typeof window === "undefined") return;
 
     const handlePopState = () => {
-      setPath(window.location.pathname || "/");
+      setPath(normalizePath(window.location.pathname));
     };
 
     window.addEventListener("popstate", handlePopState);
@@ -44,7 +51,7 @@ export const RouterProvider: React.FC<RouterProviderProps> = ({ children, initia
     if (typeof window !== "undefined" && window.history) {
       window.history.pushState({}, "", to);
     }
-    setPath(to);
+    setPath(normalizePath(to));
     if (typeof window !== "undefined") {
       window.scrollTo(0, 0);
     }

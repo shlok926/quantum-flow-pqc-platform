@@ -1,373 +1,660 @@
-# Quantum Flow Technologies — PQC Discovery & Risk Assessment Platform
+# Quantum Flow Technologies - Post-Quantum Cryptography (PQC) Discovery and Risk Assessment Platform
 
-[![Development Stage](https://img.shields.io/badge/Stage-Sprint%200%20%28Engineering%20Foundation%20%26%20Design%29-blue.svg)](#16-current-development-status)
+[![Development Stage](https://img.shields.io/badge/Stage-Sprint%201%20%28Discovery%2C%20CBOM%20%26%20Risk%20Engine%29-blue.svg)](#current-development-status)
 [![Python Version](https://img.shields.io/badge/Python-3.12%2B-blue.svg)](https://www.python.org/)
 [![FastAPI](https://img.shields.io/badge/Backend-FastAPI-009688.svg)](https://fastapi.tiangolo.com/)
 [![React](https://img.shields.io/badge/Frontend-React%2018%20%7C%20TypeScript-61dafb.svg)](https://react.dev/)
-[![Governance](https://img.shields.io/badge/Governance-Documented%20%26%20Traceable-success.svg)](#11-documentation-index)
+[![Standards](https://img.shields.io/badge/Standards-NIST%20FIPS%20203%20%2F%20204%20%2F%20205-success.svg)](#standards-alignment)
 [![License Status](https://img.shields.io/badge/License-Proprietary%20%2F%20Pending%20Approval-lightgrey.svg)](#license-status)
 
 ---
 
-## 1. Project Name
+## Table of Contents
 
-**Quantum Flow Technologies — Post-Quantum Cryptography (PQC) Discovery & Risk Assessment Platform**  
-*Repository:* `quantum-flow-pqc-platform`
-
----
-
-## 2. Project Overview
-
-Quantum Flow is an enterprise cybersecurity platform engineered to help organizations systematically prepare for the post-quantum cryptographic transition. The platform provides continuous, non-destructive discovery of cryptographic assets across public-facing infrastructure, internal services, and application dependencies, normalizes findings into an evidence-backed Cryptographic Bill of Materials (CBOM), and executes deterministic quantum risk assessments to prioritize remediation.
-
----
-
-## 3. Company Vision & Strategic Context
-
-As articulated by Founder & CEO Nitin M. Jakaty in [*Securing the World’s Cryptography for the Quantum Era*](docs/00-company-vision/PQC_Platform_Vision_and_Roadmap.pdf):
-
-> *"Every organisation that relies on digital trust will have to change its cryptography. We intend to be the company that shows them how... Our approach is clear: We will not invent cryptography. We will build on published standards and proven components, and create our own IP where it matters most: discovery, the cryptographic asset model, risk analysis, migration orchestration, policy controls, integrations and the evidence trail that proves the work was done right."*
-
-The platform aligns with federal and international post-quantum mandates:
-- **NIST Post-Quantum Standards:** ML-KEM (FIPS 203), ML-DSA (FIPS 204), and SLH-DSA (FIPS 205).
-- **National Policy & Sovereignty:** Department of Science and Technology (DST) February 2026 report on *Implementing a Quantum-Safe Ecosystem in India* and the *National Quantum Mission (NQM)*.
-- **Strategic Adoption:** Active initiatives toward adoption as a national reference architecture with the Government of Karnataka and international partners.
-
----
-
-## 4. Problem Statement
-
-Modern enterprise security architectures rely heavily on classical public-key cryptography—predominantly RSA and Elliptic-Curve Cryptography (ECC)—to secure authentication, digital certificates, data transit, and transactional integrity. 
-
-The advent of a Cryptographically Relevant Quantum Computer (CRQC) poses an existential threat to these algorithms via **Shor’s Algorithm**, which fundamentally breaks the mathematical assumptions underpinning RSA and discrete logarithm/elliptic-curve schemes. Furthermore, **Grover’s Algorithm** reduces the effective security margins of symmetric encryption (AES) and cryptographic hashing.
-
-Enterprises currently face critical transition hurdles:
-- **Zero Cryptographic Visibility:** Cryptography is embedded across thousands of endpoints, libraries, cloud services, and legacy appliances without a centralized inventory.
-- **Harvest Now, Decrypt Later (HNDL):** Adversaries are actively intercepting and storing encrypted enterprise traffic today to decrypt once quantum computing reaches commercial viability.
-- **Compliance & Regulatory Mandates:** Organizations must comply with aggressive federal and international standards (e.g., NIST FIPS 203/204/205, NSA CNSA 2.0, OMB M-23-02) requiring complete cryptographic inventory and PQC migration milestones.
-- **Complexity of Migration:** Transitioning to quantum-resistant lattice-based schemes requires assessing key size impacts, protocol compatibility, performance overheads, and dependency chains.
+- [1. Executive Summary](#1-executive-summary)
+- [2. Problem Statement and Strategic Context](#2-problem-statement-and-strategic-context)
+- [3. Standards Alignment](#3-standards-alignment)
+- [4. Core Platform Capabilities](#4-core-platform-capabilities)
+- [5. System Architecture](#5-system-architecture)
+- [6. Discovery and Assessment Workflow](#6-discovery-and-assessment-workflow)
+- [7. API Microservices Architecture](#7-api-microservices-architecture)
+- [8. Database Architecture and Entity-Relationship Model](#8-database-architecture-and-entity-relationship-model)
+- [9. Cryptographic Analysis Engines](#9-cryptographic-analysis-engines)
+  - [9.1 Bounded Network TLS Collector](#91-bounded-network-tls-collector)
+  - [9.2 Static Source Code and Dependency Parser](#92-static-source-code-and-dependency-parser)
+  - [9.3 Operating System Process Containment](#93-operating-system-process-containment)
+  - [9.4 Deterministic Quantum Risk Scoring Methodology (v1.0)](#94-deterministic-quantum-risk-scoring-methodology-v10)
+  - [9.5 CycloneDX 1.6 CBOM and Canonical JSON Integrity](#95-cyclonedx-16-cbom-and-canonical-json-integrity)
+- [10. Repository Organization](#10-repository-organization)
+- [11. Technology Stack](#11-technology-stack)
+- [12. Local Development and Deployment](#12-local-development-and-deployment)
+  - [12.1 Prerequisites](#121-prerequisites)
+  - [12.2 Environment Configuration](#122-environment-configuration)
+  - [12.3 Service Initialization](#123-service-initialization)
+  - [12.4 Cloud Deployment Configurations (Render and Vercel)](#124-cloud-deployment-configurations-render-and-vercel)
+- [13. Verification and Quality Gates](#13-verification-and-quality-gates)
+- [14. Security and Authorized Scanning Governance](#14-security-and-authorized-scanning-governance)
+- [15. Current Development Status](#15-current-development-status)
+- [16. Future Work and Roadmap](#16-future-work-and-roadmap)
+- [17. Engineering Governance and Contributions](#17-engineering-governance-and-contributions)
+- [18. License Status](#18-license-status)
 
 ---
 
-## 5. Product Objectives
+## 1. Executive Summary
 
-1. **Automate Cryptographic Discovery:** Systematically identify cryptographic algorithms, key lengths, certificates, and cipher suites across authorized enterprise endpoints.
-2. **Establish Single Source of Truth:** Generate a machine-readable, auditable, and versioned Cryptographic Bill of Materials (CBOM) conforming to modern supply-chain standards (CycloneDX 1.6).
-3. **Quantify Quantum Risk with Explainability:** Provide transparent, deterministic, and ruleset-versioned risk scores linking every finding directly to empirical observation evidence.
-4. **Govern Migration Planning:** Formulate actionable remediation guidance, migration waves, and compatibility roadmaps without disrupting active business operations.
-5. **Ensure Continuous Assurance:** Monitor cryptographic agility and compliance over time, detecting regressions, expiring certificates, or deprecated algorithms.
+Quantum Flow is an enterprise post-quantum cybersecurity control plane engineered to transition organizational infrastructure to quantum-resilient cryptography. The platform executes non-intrusive, automated discovery across external network perimeters and application code repositories, normalizes findings into an evidence-backed Cryptographic Bill of Materials (CBOM), and executes deterministic quantum risk evaluations based on published NIST, CNSA 2.0, and Post-Quantum Cryptography (PQC) standards.
+
+Every finding generated by the platform maintains strict provenance, backed by raw cryptographic handshake captures, X.509 certificate chains, Abstract Syntax Tree (AST) code invocations, and cryptographic SHA-256 evidence hashes.
 
 ---
 
-## 6. Core Product Capabilities
+## 2. Problem Statement and Strategic Context
+
+Modern enterprise digital trust relies on public-key cryptography—principally RSA, Diffie-Hellman (DH), and Elliptic-Curve Cryptography (ECDSA/ECDH)—to protect web traffic, identity tokens, APIs, and data at rest.
+
+The advent of a Cryptographically Relevant Quantum Computer (CRQC) invalidates these foundations:
+- **Shor's Algorithm:** Efficiently solves integer factorization and discrete logarithms in polynomial time, completely undermining RSA and elliptic-curve cryptography.
+- **Grover's Algorithm:** Accelerates brute-force searches against symmetric ciphers and hash functions, halving their effective key lengths (e.g., AES-128 is reduced to 64 bits of quantum security).
+- **Harvest Now, Decrypt Later (HNDL):** Hostile adversaries systematically intercept and record long-lived encrypted communications today to decrypt retroactively once quantum computers become operational.
+
+Enterprise challenges:
+1. **Lack of Cryptographic Inventory:** Organizations have no consolidated visibility into which algorithms, key lengths, certificates, and libraries are deployed across distributed systems.
+2. **Regulatory Mandates:** Governments and standards bodies have established strict migration timelines (e.g., US White House OMB M-23-02, NSA Commercial National Security Algorithm Suite CNSA 2.0, India Department of Science and Technology NQM Guidelines).
+3. **Migration Complexity:** Transitioning to lattice-based post-quantum algorithms introduces larger key sizes, increased ciphertext overhead, and backward-compatibility challenges.
+
+---
+
+## 3. Standards Alignment
+
+The Quantum Flow platform enforces strict adherence to internationally recognized post-quantum standards:
+
+- **NIST FIPS 203:** Module-Lattice-Based Key-Encapsulation Mechanism (ML-KEM, formerly CRYSTALS-Kyber).
+- **NIST FIPS 204:** Module-Lattice-Based Digital Signature Algorithm (ML-DSA, formerly CRYSTALS-Dilithium).
+- **NIST FIPS 205:** Stateless Hash-Based Digital Signature Algorithm (SLH-DSA, formerly SPHINCS+).
+- **NIST SP 800-208:** State-Management for Stateful Hash-Based Signature Schemes (LMS and XMSS).
+- **CycloneDX 1.6:** Ecma-standardized Cryptographic Bill of Materials (CBOM) specification for software and network supply chains.
+- **RFC 8785:** JSON Canonicalization Scheme (JCS) for deterministic, tamper-evident cryptographic report verification.
+
+---
+
+## 4. Core Platform Capabilities
 
 | Capability | Description |
 |---|---|
-| **Cryptographic Discovery** | Automated, non-destructive network and TLS inspection of authorized targets to capture protocol versions, cipher suites, key exchange mechanisms, and complete X.509 certificate chains. |
-| **Cryptographic Asset Inventory** | Centralized cataloging of cryptographic assets (certificates, public keys, algorithms, protocol endpoints) with distinct identity resolution and lifecycle tracking. |
-| **Cryptographic Bill of Materials (CBOM)** | Standardized, exportable inventory schemas (CycloneDX 1.6 / JSON) linking components to their underlying cryptographic algorithms, key parameters, and evidence provenance. |
-| **Quantum Risk Assessment** | Deterministic evaluation of discovered assets against quantum attack vectors (Shor's / Grover's), categorizing assets into Post-Quantum Safe, Quantum-Vulnerable, or Deprecated. |
-| **PQC Migration Planning** | Risk-prioritized remediation recommendations, compatibility roadmaps, and migration milestone planning aligned with NIST and CNSA 2.0 standards. |
-| **Continuous Assurance** | Automated re-scanning, drift detection, certificate rotation tracking, and cryptographic policy compliance verification over time. |
+| **Perimeter TLS Discovery** | Non-intrusive network handshake inspection capturing TLS protocols, cipher suites, supported elliptic curves, and full X.509 leaf/intermediate chains on port 443. |
+| **Static Code and Archive Inspection** | Static analysis engine parsing source code repositories and staged ZIP archives to detect cryptographic primitives, library usages, and hardcoded keys. |
+| **Operating System Containment** | Worker execution boundaries enforced using Windows Job Objects and Linux POSIX process groups (PGID) with strict memory, CPU, and process count quotas. |
+| **Cryptographic Bill of Materials (CBOM)** | Automated generation and export of CycloneDX 1.6 CBOM artifacts with asset dependency mapping and cryptographic parameter tracking. |
+| **Deterministic Risk Engine (QVI)** | Quantum Vulnerability Index (QVI Methodology v1.0) providing transparent, reproducible risk scoring across Shor and Grover threat vectors. |
+| **Enterprise Management Console** | React 18 / TypeScript interface for target registration, interactive assessment wizards, live staged progress streaming, and executive PDF/CSV downloads. |
+| **Public Assessment Scanner** | Bounded, public-facing domain scanning portal with SSRF validation, RFC 1035 syntax checking, and explicit authorization declarations. |
 
 ---
 
-## 7. Product Workflow
+## 5. System Architecture
 
-The platform operates across six continuous lifecycle stages defined in the company roadmap:
-
-$$\textbf{Discover} \longrightarrow \textbf{Inventory} \longrightarrow \textbf{Prioritise} \longrightarrow \textbf{Plan} \longrightarrow \textbf{Migrate} \longrightarrow \textbf{Assure}$$
+The platform separates the user-facing control plane from the untrusted execution plane, ensuring that network discovery and archive extraction are strictly segregated from persistence and API layers.
 
 ```mermaid
-flowchart LR
-    A["1. Discover<br/>(Find certificates, keys,<br/>protocols, crypto in code)"] --> B["2. Inventory<br/>(Build evidence-backed<br/>CBOM asset graph)"]
-    B --> C["3. Prioritise<br/>(Score risk by exposure<br/>& confidentiality lifetime)"]
-    C --> D["4. Plan<br/>(Dependency-aware<br/>migration packages)"]
-    D --> E["5. Migrate<br/>(Controlled PQC and<br/>hybrid changes)"]
-    E --> F["6. Assure<br/>(Test, verify & maintain<br/>tamper-evident audit trail)"]
-    
-    style A fill:#e1f5fe,stroke:#0288d1,stroke-width:2px
-    style B fill:#e8f5e9,stroke:#388e3c,stroke-width:2px
-    style C fill:#fff3e0,stroke:#f57c00,stroke-width:2px
-    style D fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
-    style E fill:#fce4ec,stroke:#c2185b,stroke-width:2px
-    style F fill:#e0f2f1,stroke:#00796b,stroke-width:2px
-```
-
-*Note: Initial delivery milestones (Sprints 0–6) focus on establishing the Discover, Inventory, and Prioritise foundation.*
-
----
-
-## 8. High-Level Architecture
-
-The platform is designed around a **control-plane and execution-plane separation**, ensuring untrusted network inspection is isolated from core data persistence and user-facing APIs.
-
-```mermaid
-graph TD
-    subgraph UI ["User Interface"]
-        SPA["React 18 / Vite SPA<br/>(TypeScript, Tailwind)"]
+flowchart TD
+    subgraph Clients["Client Interface Layer"]
+        SPA["React 18 / TypeScript SPA<br/>(Tailwind CSS, Vite)"]
+        PUB["Public Free Scanner Portal<br/>(Domain Triage & Authorization)"]
     end
 
-    subgraph ControlPlane ["Control Plane (FastAPI API Service)"]
-        API["FastAPI REST Application"]
-        AUTH["OIDC / JWT Auth & RBAC"]
-        PROJECTS["Project & Target Management"]
-        ORCH["Scan Job Orchestrator"]
-        API --> AUTH
-        API --> PROJECTS
-        API --> ORCH
+    subgraph Gateway["API Gateway and Control Plane (FastAPI)"]
+        API["FastAPI Modular Application"]
+        BODY_CEIL["25MB Request Ceiling Middleware"]
+        SSRF_GATE["SSRF & IP Literal Safety Filter"]
+        CORS["Configurable Dynamic CORS Middleware"]
+        ROUTERS["Domain Routers<br/>(/targets, /scans, /source, /assets, /risk, /assessments)"]
+        
+        API --> BODY_CEIL
+        BODY_CEIL --> SSRF_GATE
+        SSRF_GATE --> CORS
+        CORS --> ROUTERS
     end
 
-    subgraph MessageBroker ["Task Broker & Queue"]
-        REDIS[("Redis 7<br/>Broker & Cache")]
+    subgraph Messaging["Message Broker & Task Coordination"]
+        REDIS[("Redis 7<br/>Task Queue & State Caching")]
     end
 
-    subgraph ExecutionPlane ["Execution Plane (Isolated Workers)"]
-        WORKER["Celery Task Worker"]
-        SAFETY["Safety Gate<br/>(SSRF & DNS Rebinding Filter)"]
-        COLLECTOR["Bounded TLS Collector<br/>(Socket & ASN.1 Parser)"]
-        WORKER --> SAFETY
-        SAFETY --> COLLECTOR
+    subgraph Workers["Isolated Execution Plane (Autonomous Worker)"]
+        WORKER["Autonomous Task Worker Daemon"]
+        CONTAINMENT["OS Containment Sandbox<br/>(Windows Job Object / Linux PGID)"]
+        TLS_COLLECTOR["Bounded TLS Handshake Collector<br/>(Socket, ASN.1, X.509 Chain)"]
+        SRC_PARSER["AST Source Code Parser<br/>(Python AST & Archive Unpacker)"]
+        
+        WORKER --> CONTAINMENT
+        CONTAINMENT --> TLS_COLLECTOR
+        CONTAINMENT --> SRC_PARSER
     end
 
-    subgraph TargetEnv ["External / Authorized Scope"]
-        TARGETS["Authorized Network Endpoints<br/>(Port 443 / 8443)"]
+    subgraph Targets["Target Environments"]
+        EXT_NET["Authorized External Hostnames<br/>(Standard Port 443)"]
+        ARCHIVES["Staged Upload Archives<br/>(Zip-Slip Protected Volume)"]
     end
 
-    subgraph AnalyticsEngine ["Analytics & Correlation"]
-        CORR["CBOM Asset Correlation Engine"]
-        RISK["Deterministic Quantum Risk Engine"]
+    subgraph Intelligence["Cryptographic Intelligence Engine"]
+        CBOM_ENG["CBOM Asset Correlation Engine"]
+        RISK_ENG["Deterministic QVI Risk Engine (v1.0)"]
+        CANON_HASH["RFC 8785 Canonical JSON Hasher"]
+        CYCLONE["CycloneDX 1.6 CBOM Serializer"]
     end
 
-    subgraph Persistence ["Persistence Layer"]
-        PG[("PostgreSQL 16<br/>(Relational, JSONB, Audit)")]
+    subgraph Storage["Persistence Layer"]
+        PG[("PostgreSQL 16<br/>Relational Schema + JSONB Evidence")]
     end
 
-    SPA -->|HTTPS / REST| API
-    ORCH -->|Dispatch Job| REDIS
-    REDIS -->|Claim Job| WORKER
-    COLLECTOR -->|Safe Handshake| TARGETS
-    WORKER -->|Persist Raw Observations| PG
-    PG --> CORR
-    CORR --> RISK
-    RISK --> PG
+    SPA -->|REST / HTTPS| API
+    PUB -->|REST / HTTPS| API
+    ROUTERS -->|Dispatch Async Tasks| REDIS
+    REDIS -->|Consume Jobs| WORKER
+    TLS_COLLECTOR -->|Bounded Probe| EXT_NET
+    SRC_PARSER -->|Safe Extract| ARCHIVES
+    WORKER -->|Write Observations & SHA-256| PG
+    ROUTERS -->|Trigger Evaluation| CBOM_ENG
+    CBOM_ENG --> RISK_ENG
+    RISK_ENG --> CANON_HASH
+    CANON_HASH --> CYCLONE
+    CYCLONE --> PG
+    ROUTERS -->|Query Results & Reports| PG
 ```
 
 ---
 
-## 9. Proposed Technology Stack
+## 6. Discovery and Assessment Workflow
 
-- **Backend API & Control Plane:** Python 3.12+, FastAPI, Pydantic v2
-- **Persistence & ORM:** PostgreSQL 16 (Relational models & JSONB evidence envelopes), SQLAlchemy 2.0 (async), Alembic
-- **Task Queue & Caching:** Redis 7, Celery 5.3+
-- **Frontend Dashboard:** React 18, TypeScript 5.4+, Vite, Tailwind CSS, TanStack Query
-- **Cryptographic & Network Tooling:** Python `cryptography` (X.509/ASN.1 parsing), standard `ssl`/`socket` for bounded handshakes
-- **Code Quality & CI/CD:** Ruff (formatting and linting), Mypy (strict type checking), Pytest (unit, integration, security), GitHub Actions
-- **Containerization:** Docker, Docker Compose
+The platform follows a deterministic, seven-stage assessment lifecycle from target ingestion through report freezing.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User as Security Officer
+    participant Web as Web Dashboard
+    participant API as FastAPI Control Plane
+    participant Redis as Redis Task Broker
+    participant Worker as Autonomous Worker
+    participant Target as Network Target / Code
+    participant DB as PostgreSQL Database
+    participant Engine as QVI & CBOM Engine
+
+    User->>Web: Initiate Assessment / Scan
+    Web->>API: POST /api/v1/targets or /source/upload
+    API->>API: Validate SSRF Guardrails (RFC 1035 / RFC 5737)
+    API->>DB: Persist Target and Staged Job Record
+    API->>Redis: Enqueue Discovery Task
+    Redis->>Worker: Dispatch Task to Worker Process
+    Worker->>Worker: Apply OS Containment (Job Object / PGID)
+    Worker->>Target: Execute Non-Destructive Probe / AST Extraction
+    Target-->>Worker: Return Handshake Bytes / Cryptographic Primitives
+    Worker->>Worker: Compute SHA-256 Evidence Checksum
+    Worker->>DB: Store Raw Observation with Canonical Evidence
+    Worker-->>API: Notify Completion via Redis
+    User->>Web: Launch Assessment Synthesis
+    Web->>API: POST /api/v1/assessments/{id}/launch
+    API->>Engine: Run Correlation and Deduplication
+    Engine->>DB: Upsert Cryptographic Assets and Dependency Graph
+    API->>Engine: Calculate Shor and Grover Vulnerability Scores
+    Engine->>DB: Store Risk Assessment and Migration Waves
+    API->>Engine: Compile RFC 8785 Canonical JSON Snapshot
+    Engine->>DB: Freeze Assessment Report and Store Snapshot Hash
+    API-->>Web: Stream Completed Progress and Artifact Download URLs
+```
 
 ---
 
-## 10. Repository Structure
+## 7. API Microservices Architecture
+
+All backend operations are accessible through a structured REST API under `/api/v1`:
+
+```mermaid
+flowchart TD
+    ROOT["FastAPI Control Plane Root"]
+
+    subgraph System["System Diagnostics"]
+        HL["GET /health/live<br/>Liveness Probe"]
+        HR["GET /health/ready<br/>Readiness Probe (DB + Redis)"]
+    end
+
+    subgraph Scope["Perimeter Management"]
+        T_LIST["GET /api/v1/targets<br/>List Target Scope"]
+        T_CREATE["POST /api/v1/targets<br/>Register Target & Authorization"]
+        T_VERIFY["POST /api/v1/targets/{id}/verify<br/>Verify Domain Ownership Token"]
+    end
+
+    subgraph Scans["Network Scanning"]
+        S_START["POST /api/v1/scans<br/>Trigger Bounded TLS Scan"]
+        S_GET["GET /api/v1/scans/{id}<br/>Fetch Scan State & Metadata"]
+        S_POLL["GET /api/v1/scans/{id}/poll<br/>Poll Scan Execution Status"]
+    end
+
+    subgraph Ingestion["Code & Observation Ingestion"]
+        UP_CHUNK["POST /api/v1/source/upload<br/>Multipart Chunked Archive Ingestion"]
+        OBS_LIST["GET /api/v1/observations<br/>Query Raw Evidence Records"]
+        OBS_EVID["GET /api/v1/observations/{id}/evidence<br/>Download Raw Captured Evidence"]
+    end
+
+    subgraph Inventory["CBOM & Risk Analytics"]
+        A_LIST["GET /api/v1/assets<br/>Query Cryptographic Assets"]
+        A_GRAPH["GET /api/v1/assets/graph<br/>Retrieve Cryptographic Dependency Graph"]
+        R_OVERVIEW["GET /api/v1/risk/overview<br/>Aggregated Shor & Grover Exposure"]
+        R_SCORES["GET /api/v1/risk/scores<br/>Granular QVI Asset Scoring"]
+    end
+
+    subgraph Orchestration["Assessment & Reporting"]
+        ASS_WIZARD["POST /api/v1/assessments<br/>Create Structured Assessment"]
+        ASS_LAUNCH["POST /api/v1/assessments/{id}/launch<br/>Trigger Multi-Stage Pipeline"]
+        ASS_POLL["GET /api/v1/assessments/{id}/poll<br/>Stream Stage-by-Stage Progress"]
+        ASS_REPORT["GET /api/v1/assessments/{id}/report<br/>Fetch Frozen Snapshot & Hash"]
+        ASS_CDX["GET /api/v1/assessments/{id}/export/cyclonedx<br/>Download CycloneDX 1.6 CBOM"]
+        ASS_MD["GET /api/v1/assessments/{id}/export/markdown<br/>Download Executive Audit Report"]
+        ASS_CSV["GET /api/v1/assessments/{id}/export/csv<br/>Download Asset Inventory CSV"]
+    end
+
+    ROOT --> System
+    ROOT --> Scope
+    ROOT --> Scans
+    ROOT --> Ingestion
+    ROOT --> Inventory
+    ROOT --> Orchestration
+```
+
+---
+
+## 8. Database Architecture and Entity-Relationship Model
+
+The database schema utilizes PostgreSQL 16 with asynchronous SQLAlchemy 2.0. It combines third-normal-form relational integrity with indexed JSONB envelopes for raw cryptographic evidence.
+
+```mermaid
+erDiagram
+    TARGET ||--o{ SCAN : initiates
+    TARGET ||--o{ OBSERVATION : contextualizes
+    SCAN ||--o{ OBSERVATION : generates
+    OBSERVATION ||--o{ ASSET_OBSERVATION : references
+    CRYPTOGRAPHIC_ASSET ||--o{ ASSET_OBSERVATION : links
+    CRYPTOGRAPHIC_ASSET ||--o{ ASSET_RELATIONSHIP : originates
+    CRYPTOGRAPHIC_ASSET ||--o{ ASSET_RELATIONSHIP : targets
+    CRYPTOGRAPHIC_ASSET ||--o{ RISK_ASSESSMENT : evaluates
+    CRYPTOGRAPHIC_ASSET ||--o{ RECOMMENDATION : remediates
+    ASSESSMENT ||--o{ ASSESSMENT_ASSET : scopes
+    CRYPTOGRAPHIC_ASSET ||--o{ ASSESSMENT_ASSET : included_in
+    ASSESSMENT ||--o{ ASSESSMENT_OBSERVATION : aggregates
+    OBSERVATION ||--o{ ASSESSMENT_OBSERVATION : contributes_to
+    RISK_ASSESSMENT ||--o{ RISK_FACTOR : contains
+
+    TARGET {
+        uuid id PK
+        varchar hostname
+        varchar environment
+        varchar criticality
+        varchar status
+        varchar authorisation_status
+        varchar verification_token
+        timestamptz created_at
+    }
+
+    SCAN {
+        uuid id PK
+        uuid target_id FK
+        varchar status
+        varchar target_ip
+        integer port
+        varchar collector_version
+        text error_message
+        timestamptz completed_at
+    }
+
+    OBSERVATION {
+        uuid id PK
+        uuid scan_id FK
+        uuid target_id FK
+        varchar observation_type
+        varchar evidence_sha256
+        varchar collector_version
+        jsonb evidence_payload
+        timestamptz observed_at
+    }
+
+    CRYPTOGRAPHIC_ASSET {
+        uuid id PK
+        varchar asset_type
+        varchar canonical_name
+        varchar algorithm
+        integer key_size_bits
+        varchar curve_oid
+        varchar quantum_risk_tier
+        timestamptz first_discovered
+    }
+
+    ASSET_OBSERVATION {
+        uuid id PK
+        uuid asset_id FK
+        uuid observation_id FK
+        timestamptz created_at
+    }
+
+    ASSET_RELATIONSHIP {
+        uuid id PK
+        uuid source_asset_id FK
+        uuid target_asset_id FK
+        varchar relationship_type
+    }
+
+    ASSESSMENT {
+        uuid id PK
+        varchar name
+        varchar status
+        jsonb scope_targets
+        numeric qvi_score
+        integer total_assets
+        integer vulnerable_assets
+        varchar report_snapshot_hash
+        jsonb report_snapshot
+        timestamptz completed_at
+    }
+
+    ASSESSMENT_ASSET {
+        uuid id PK
+        uuid assessment_id FK
+        uuid asset_id FK
+    }
+
+    ASSESSMENT_OBSERVATION {
+        uuid id PK
+        uuid assessment_id FK
+        uuid observation_id FK
+    }
+
+    RISK_ASSESSMENT {
+        uuid id PK
+        uuid asset_id FK
+        numeric shor_exposure
+        numeric grover_exposure
+        numeric quantum_vulnerability_index
+        varchar pqc_migration_urgency
+        varchar methodology_version
+    }
+
+    RISK_FACTOR {
+        uuid id PK
+        uuid risk_assessment_id FK
+        varchar factor_code
+        numeric factor_weight
+        text explanation
+    }
+
+    RECOMMENDATION {
+        uuid id PK
+        uuid asset_id FK
+        varchar title
+        varchar target_pqc_primitive
+        varchar migration_wave
+        text rationale
+    }
+```
+
+---
+
+## 9. Cryptographic Analysis Engines
+
+### 9.1 Bounded Network TLS Collector
+
+The network collector executes destination-pinned, bounded TLS socket handshakes to analyze public-facing TLS endpoints without launching disruptive intrusion attempts.
+
+- **Socket Bounds:** Enforces strict connect timeouts (5 seconds), read timeouts (5 seconds), and destination IP pinning to prevent Time-of-Check to Time-of-Use (TOCTOU) DNS rebinding.
+- **Protocol Inspection:** Negotiates across TLS 1.3 and TLS 1.2 to inspect cipher suite preferences, elliptic curve group negotiation (e.g., X25519, secp256r1, ML-KEM-768 hybrid groups), and signature algorithms.
+- **Certificate Chain Extraction:** Parses complete leaf, intermediate, and root X.509 ASN.1 certificates using `cryptography.x509` to extract public key algorithms, bit lengths, serial numbers, and validity periods.
+
+### 9.2 Static Source Code and Dependency Parser
+
+The static analysis engine inspects software repositories and unpacks staged ZIP archives to detect cryptographic implementations at rest:
+
+- **Python AST Inspection:** Utilizes Python's native `ast` parser to identify cryptographic library imports (e.g., `cryptography.hazmat`, `hashlib`, `pycryptodome`, `rsa`) and cryptographic constructor calls (e.g., `generate_private_key`, `Cipher`, `RSAPrivateKey`).
+- **Zip-Slip Safe Extraction:** Restricts archive extraction using canonical path resolution to guarantee unpacked files cannot traverse outside the isolated scratch directory.
+- **Evidence Provenance:** Generates relative file paths, AST line numbers, and token contexts for every identified primitive.
+
+### 9.3 Operating System Process Containment
+
+To ensure that archive parsing and untrusted inspection cannot compromise host stability:
+
+- **Windows Execution:** Spawns worker child processes inside a dedicated Windows Job Object (`CreateJobObjectW`), configuring `JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE`, process memory limits (512MB), and active process ceilings.
+- **Linux / POSIX Execution:** Spawns worker tasks in dedicated process groups using `setpgid()`, enforcing resource ceilings via `resource.setrlimit` (`RLIMIT_AS` for virtual memory and `RLIMIT_CPU` for compute bounds).
+
+### 9.4 Deterministic Quantum Risk Scoring Methodology (v1.0)
+
+The platform evaluates cryptographic risk using a deterministic formula that weighs attack susceptibility against operational exposure:
+
+$$\text{QVI} = \min\left(100, \, \left(\text{Shor Impact} \times 0.60 + \text{Grover Impact} \times 0.20 + \text{Exposure Lifetime} \times 0.20\right) \times \text{Criticality Multiplier}\right)$$
+
+- **Shor Vulnerability (0–100):** RSA-1024/2048/4096 and standard ECC (secp256r1, Curve25519) receive maximum Shor exposure (100) due to complete polynomial-time breakability. Post-quantum lattice schemes (ML-KEM, ML-DSA) receive zero Shor exposure.
+- **Grover Vulnerability (0–100):** Evaluates symmetric ciphers and hashing primitives. AES-128 and 3DES receive high Grover exposure (80–100); AES-256 receives low exposure (10) as it retains 128 bits of post-quantum security margin.
+- **Migration Waves:** Classifies all assets into actionable transition phases:
+  - `Wave 1 (Immediate)`: Deprecated classical schemes (RSA < 2048, MD5, SHA-1, 3DES).
+  - `Wave 2 (High Priority)`: Public perimeter TLS endpoints securing external communications.
+  - `Wave 3 (Planned Migration)`: Internal service-to-service credentials and persistent certificates.
+  - `Wave 4 (Agile / Maintained)`: AES-256 and verified PQC hybrid primitives.
+
+### 9.5 CycloneDX 1.6 CBOM and Canonical JSON Integrity
+
+- **CycloneDX 1.6 Export:** Serializes discovered assets into the standardized `cryptographic-asset` component format, encoding algorithm types, key parameters, NIST security levels, and cryptographic properties.
+- **RFC 8785 Canonical JSON Hashing:** When an assessment is marked complete, its snapshot is serialized using RFC 8785 canonical whitespace and key-sorting rules and hashed with SHA-256. This snapshot hash provides a permanent, tamper-evident audit receipt.
+
+---
+
+## 10. Repository Organization
 
 ```text
 quantum-flow-pqc-platform/
 ├── apps/
-│   └── web/                 # React 18 / Vite / TypeScript dashboard shell
+│   └── web/                   # React 18 / TypeScript Vite web application
+│       ├── src/
+│       │   ├── app/           # App root and navigation router
+│       │   ├── components/    # Reusable UI widgets and layout headers
+│       │   ├── features/      # Domain modules (assessments, cbom, risk, targets, public)
+│       │   ├── router/        # Client-side router with query parameter normalization
+│       │   └── services/      # Typed API client and Axios instances
+│       └── package.json       # Frontend package configuration
 ├── services/
-│   ├── api/                 # FastAPI modular monolith control plane
+│   ├── api/                   # FastAPI control plane service
 │   │   ├── app/
-│   │   │   ├── api/v1/endpoints/  # API route handlers (/health/live, /health/ready)
-│   │   │   ├── core/              # Config, settings, redis client
-│   │   │   ├── db/                # SQLAlchemy Base, session, async engine
-│   │   │   ├── schemas/           # Pydantic schemas
-│   │   │   └── main.py            # FastAPI entry point & exception handlers
-│   │   └── Dockerfile       # Multi-stage non-root Python 3.12 container
-│   └── worker/              # Asynchronous worker process daemon
-│       ├── app/             # Background task runner scaffold
-│       └── Dockerfile       # Multi-stage non-root Python 3.12 container
+│   │   │   ├── api/v1/        # REST route definitions
+│   │   │   ├── core/          # App configuration, security, and logging
+│   │   │   ├── db/            # SQLAlchemy database models, sessions, and engine
+│   │   │   └── schemas/       # Pydantic request and response schemas
+│   │   └── Dockerfile         # Multi-stage production container definition
+│   └── worker/                # Autonomous worker process daemon
+│       ├── app/               # Background task scheduler and event loops
+│       └── Dockerfile         # Multi-stage production container definition
 ├── packages/
-│   └── scanner/             # TLS collector & RFC 5737/3849 safety guardrails
-├── migrations/              # Alembic database migration environment
-│   ├── versions/            # Schema migration scripts
-│   └── env.py               # Async/Sync Alembic runner
+│   └── scanner/               # Cryptographic discovery engines and parsers
+│       └── source/            # AST parsers, archive handlers, and safety filters
+├── migrations/                # Alembic database migration environment
+│   └── versions/              # Versioned schema migration scripts
 ├── tests/
-│   ├── unit/                # Backend unit tests (config, health endpoints, routing)
-│   ├── integration/         # Integration test suite
-│   ├── security/            # Security test suite (CORS, SSRF restrictions)
-│   ├── contract/            # API contract verification
-│   └── e2e/                 # End-to-end testing
-├── infra/
-│   └── docker/              # Nginx reverse proxy configuration
-├── .github/
-│   └── workflows/
-│       └── ci.yml           # CI workflow (Lint, Format, Mypy, Pytest, Web CI)
-├── docker-compose.yml       # PostgreSQL 16 & Redis 7 local infrastructure
-├── pyproject.toml           # Python packaging, Ruff, Mypy, and Pytest configuration
-├── package.json             # Root npm workspace manifest
-├── package-lock.json        # Committed npm dependency lockfile
-├── .env.example             # Safe environment variable template
-├── Makefile                 # Standard developer lifecycle targets
-└── docs/                    # Centralized engineering documentation library
+│   ├── unit/                  # Unit tests (configuration, parsing, schemas)
+│   ├── integration/           # Multi-service API and database workflows
+│   └── security/              # Security tests (SSRF, CORS, OS containment)
+├── pyproject.toml             # Python toolchain configuration (Ruff, Mypy, Pytest)
+├── requirements.lock          # Locked production dependencies
+├── requirements-dev.lock      # Locked development and testing dependencies
+├── .python-version            # Pinned runtime version (Python 3.12.8)
+├── docker-compose.yml         # Local PostgreSQL and Redis orchestration
+├── Makefile                   # Developer task automation
+└── README.md                  # System technical documentation
 ```
 
 ---
 
-## 11. Documentation Index
+## 11. Technology Stack
 
-The complete documentation library is indexed centrally in [`docs/README.md`](docs/README.md):
-
-| Category | Primary Document | Description | Status |
-|---|---|---|:---:|
-| **00 — Vision** | [`PQC_Platform_Vision_and_Roadmap.pdf`](docs/00-company-vision/PQC_Platform_Vision_and_Roadmap.pdf) | Company vision, roadmap & operating rhythm by Founder & CEO | Approved |
-| | [`00-company-vision/README.md`](docs/00-company-vision/README.md) | Vision summary, verification digest & core workflow | Verified |
-| **01 — Product** | [`PRD_v1.0.md`](docs/01-product/PRD_v1.0.md) | Product Requirements Document (FR-01 to FR-09) | Draft |
-| | [`Glossary.md`](docs/01-product/Glossary.md) | Product & Cryptographic Terminology Glossary | Draft |
-| **02 — Architecture** | [`TRD_v1.0.md`](docs/02-technical-architecture/TRD_v1.0.md) | Technical Requirements Document | Draft |
-| | [`SAD_v1.0.md`](docs/02-technical-architecture/SAD_v1.0.md) | System Architecture Document | Draft |
-| | [`Implementation_Blueprint_v1.0.md`](docs/02-technical-architecture/Implementation_Blueprint_v1.0.md) | Monorepo implementation blueprint & sequence | Draft |
-| | [`Architecture_Decisions/`](docs/02-technical-architecture/Architecture_Decisions/README.md) | ADR Governance, Index & [ADR Template](docs/02-technical-architecture/Architecture_Decisions/ADR_TEMPLATE.md) | Maintained |
-| **03 — Database** | [`Database_Design_v1.0.md`](docs/03-database/Database_Design_v1.0.md) | Relational database schema & JSONB storage | Draft |
-| **04 — API** | [`API_Specification_v1.0.md`](docs/04-api/API_Specification_v1.0.md) | REST API endpoint contracts & error schemas | Draft |
-| **05 — Risk Engine** | [`Quantum_Risk_Assessment_Methodology_v1.0.md`](docs/05-risk-engine/Quantum_Risk_Assessment_Methodology_v1.0.md) | Risk scoring formulas & Shor/Grover weights | Draft |
-| **06 — CBOM** | [`CBOM_Asset_Correlation_Engine_v1.0.md`](docs/06-cbom/CBOM_Asset_Correlation_Engine_v1.0.md) | Asset correlation, graph modeling & CycloneDX 1.6 | Draft |
-| **07 — Security** | [`07-security/README.md`](docs/07-security/README.md) | Overview of 10 security control domains | Maintained |
-| | [`Threat_Model_Security_Architecture_v1.0.md`](docs/07-security/Threat_Model_Security_Architecture_v1.0.md) | Comprehensive STRIDE threat model & controls | Draft |
-| | [`Data_Governance_and_Retention.md`](docs/07-security/Data_Governance_and_Retention.md) | Data classification, minimization & retention | Draft |
-| | [`Incident_Response_Plan.md`](docs/07-security/Incident_Response_Plan.md) | Product security incident handling playbooks | Draft |
-| **08 — Development**| [`Setup_Guide.md`](docs/08-development/Setup_Guide.md) | Local developer onboarding & environment setup | Maintained |
-| | [`Coding_Standards.md`](docs/08-development/Coding_Standards.md) | Engineering conventions, type hints & style | Maintained |
-| | [`Contribution_Guide.md`](docs/08-development/Contribution_Guide.md) | Detailed pull request lifecycle & review conduct | Maintained |
-| | [`Testing_Strategy.md`](docs/08-development/Testing_Strategy.md) | Multi-layer testing, synthetic CA, SSRF abuse tests | Draft |
-| | [`Deployment_Operations_Runbook.md`](docs/08-development/Deployment_Operations_Runbook.md) | Deployment runbook, health probes, DR & rollbacks | Draft |
-| | [`Release_Management_Guide.md`](docs/08-development/Release_Management_Guide.md) | Semantic versioning, release gates & changelogs | Draft |
-| **09 — Management** | [`Implementation_Roadmap.md`](docs/09-project-management/Implementation_Roadmap.md) | Sprint 0–7 delivery milestones & criteria | Proposed |
-| | [`Development_Backlog.md`](docs/09-project-management/Development_Backlog.md) | 47 engineering tasks (QF-001 to QF-047) | Active |
-| | [`Requirements_Traceability_Matrix.md`](docs/09-project-management/Requirements_Traceability_Matrix.md) | End-to-end PRD-to-test traceability matrix | Draft |
-| **Governance** | [`Documentation_Governance.md`](docs/Documentation_Governance.md) | Document lifecycle states, review cadences & rules | Draft |
-| | [`REPOSITORY_SETUP_AUDIT.md`](docs/REPOSITORY_SETUP_AUDIT.md) | Repository audit report & verification matrix | Maintained |
+- **Backend Framework:** FastAPI 0.111+ on Python 3.12+
+- **Data Validation & Settings:** Pydantic v2.7+ and Pydantic-Settings v2.2+
+- **Database Engine:** PostgreSQL 16
+- **Asynchronous ORM:** SQLAlchemy 2.0 (asyncpg driver for runtime, psycopg2 for migrations)
+- **Database Migrations:** Alembic 1.13+
+- **Task Queue & In-Memory Cache:** Redis 7 (redis-py async client)
+- **Frontend Framework:** React 18 with TypeScript 5.4+
+- **Frontend Build Tool:** Vite 5.4+
+- **Icons & Visual Language:** Lucide React
+- **Cryptographic Tooling:** Python `cryptography` 42+, PyCryptodome, CycloneDX Python Library
+- **Code Formatting & Linting:** Ruff 0.6+ (strict rule configuration)
+- **Static Type Analysis:** Mypy 1.10+ (strict mode enabled across 128 source modules)
+- **Testing Suites:** Pytest 8.2+ (Backend) and Vitest 1.6+ with Testing Library (Frontend)
 
 ---
 
-## 12. Local Development Setup Prerequisites
+## 12. Local Development and Deployment
 
-Ensure your system has the required tooling installed:
+### 12.1 Prerequisites
+
+Ensure the following tools are installed:
 - Git 2.40+
-- Python 3.12+
-- Node.js 20+ LTS & `pnpm` (or `npm`)
-- Docker Desktop or Docker Engine 25+ with Docker Compose v2
+- Python 3.12.8
+- Node.js 20+ LTS with npm 10+
+- Docker Desktop or Docker Engine 25+ with Compose v2
 
-For detailed installation and operating-system-specific instructions (including Windows PowerShell considerations), see [`docs/08-development/Setup_Guide.md`](docs/08-development/Setup_Guide.md).
+### 12.2 Environment Configuration
+
+Create a local `.env` configuration file from the template:
+
+```powershell
+Copy-Item .env.example .env
+# On Linux or macOS: cp .env.example .env
+```
+
+Ensure standard development settings are populated:
+```env
+APP_ENV=local
+API_HOST=127.0.0.1
+API_PORT=8000
+DATABASE_URL=postgresql+asyncpg://postgres:postgres@localhost:5432/quantum_flow_dev
+DATABASE_URL_SYNC=postgresql+psycopg2://postgres:postgres@localhost:5432/quantum_flow_dev
+REDIS_URL=redis://127.0.0.1:6379/0
+CORS_ORIGINS=["http://localhost:5173","http://localhost:3000","http://127.0.0.1:5173"]
+```
+
+### 12.3 Service Initialization
+
+1. Start backing PostgreSQL and Redis containers:
+   ```bash
+   docker compose up -d postgres redis
+   ```
+
+2. Execute Alembic schema migrations:
+   ```bash
+   python -m alembic upgrade head
+   ```
+
+3. Launch development processes:
+   ```bash
+   # Terminal 1: Backend API (FastAPI)
+   python -m uvicorn services.api.app.main:app --host 127.0.0.1 --port 8000 --reload
+
+   # Terminal 2: Background Task Worker
+   python -m services.worker.app.main
+
+   # Terminal 3: Frontend Web Dashboard
+   npm --prefix apps/web run dev
+   ```
+
+### 12.4 Cloud Deployment Configurations (Render and Vercel)
+
+The platform is designed to deploy across Render (Backend and Database) and Vercel (Frontend SPA):
+
+#### Render Backend Deployment (FastAPI)
+1. **Runtime:** Python 3 (pinned via `.python-version` to `3.12.8`).
+2. **Build Command:** `pip install -r requirements.lock && pip install -e .`
+3. **Start Command:** `python -m uvicorn services.api.app.main:app --host 0.0.0.0 --port $PORT`
+4. **Environment Variables:**
+   - `PYTHON_VERSION`: `3.12.8`
+   - `APP_ENV`: `production`
+   - `DATABASE_URL`: Asynchronous connection string pointing to managed PostgreSQL (`postgresql+asyncpg://...`)
+   - `DATABASE_URL_SYNC`: Synchronous connection string pointing to managed PostgreSQL (`postgresql+psycopg2://...`)
+   - `REDIS_URL`: Connection string pointing to managed Redis (`redis://...`)
+   - `CORS_ORIGINS`: Comma-separated list of allowed frontend origins (e.g., `https://quantum-flow-pqc-platform.vercel.app`)
+
+#### Vercel Frontend Deployment (React / Vite)
+1. **Framework Preset:** Vite
+2. **Root Directory:** `apps/web`
+3. **Build Command:** `npm run build`
+4. **Output Directory:** `dist`
+5. **Environment Variables:**
+   - `VITE_API_BASE_URL`: Full URL of the deployed Render backend (e.g., `https://quantum-flow-pqc-platform.onrender.com`)
 
 ---
 
-## 13. Environment Configuration & Setup
+## 13. Verification and Quality Gates
 
-1. Copy the safe configuration template:
-   ```powershell
-   Copy-Item .env.example .env
-   # or on Linux/macOS: cp .env.example .env
-   ```
-2. Start the backing infrastructure services:
-   ```bash
-   # Start PostgreSQL 16 and Redis 7 in detached mode
-   make docker-up
-   # or: docker compose up -d postgres redis
-   ```
-3. Run Alembic schema migrations:
-   ```bash
-   make migrate
-   # or: python -m alembic upgrade head
-   ```
-4. Start the development servers:
-   ```bash
-   # Terminal 1: Backend Control Plane (FastAPI) on http://127.0.0.1:8000
-   make dev-api
-
-   # Terminal 2: Asynchronous Worker Process
-   make dev-worker
-
-   # Terminal 3: Frontend Web Shell on http://localhost:5173
-   make dev-web
-   ```
-
----
-
-## 14. Testing and Code Quality Commands
-
-All quality gates are enforced locally and in continuous integration:
+Continuous verification is enforced across all repository commits:
 
 ```bash
-# Display all Makefile targets
-make help
+# 1. Python Code Linting
+python -m ruff check .
 
-# Run all test suites (Backend Pytest + Frontend Vitest)
-make test
+# 2. Python Formatting Check
+python -m ruff format --check .
 
-# Backend-only tests
-make test-backend
+# 3. Static Type Analysis across all services, packages, and tests
+python -m mypy services packages tests
 
-# Frontend-only tests
-make test-frontend
+# 4. Backend Pytest Execution
+python -m pytest -v
 
-# Run linters across entire monorepo (Ruff + ESLint)
-make lint
+# 5. Frontend Vitest Execution
+npm --prefix apps/web test -- --run
 
-# Run type checkers (Mypy + TypeScript tsc)
-make typecheck
-
-# Verify formatting without applying changes
-make format-check
+# 6. Frontend Production Build Verification
+npm --prefix apps/web run build
 ```
 
-### Health Check Endpoints
+---
 
-| Probe Route | Method | Purpose | Response |
-|---|:---:|---|---|
-| `/health/live` | GET | Liveness probe (control plane responsive) | `200 OK` JSON envelope |
-| `/health/ready` | GET | Readiness probe (PostgreSQL & Redis connected) | `200 OK` (Ready) / `503 Service Unavailable` (Degraded) |
+## 14. Security and Authorized Scanning Governance
+
+The Quantum Flow platform enforces strict security and authorization controls:
+
+- **Strict Authorization Model:** Scanning target endpoints requires explicit confirmation that the operator owns or possesses documented permission to assess the domain.
+- **SSRF Prevention:** Pre-handshake validation automatically rejects loopback addresses (`127.0.0.0/8`), private RFC 1918 subnets (`10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`), link-local spaces (`169.254.0.0/16`), and AWS/GCP cloud metadata endpoints.
+- **No Private Key Ingestion:** The platform never inspects, captures, or persists private cryptographic keys. Only public X.509 certificates, public key parameters, and cipher negotiation headers are stored.
+- **Payload Boundaries:** Upload endpoints enforce a strict 25MB ceiling on incoming HTTP request bodies before processing multipart payloads.
 
 ---
 
-## 15. Security and Authorised Scanning Notice
+## 15. Current Development Status
 
-> [!CAUTION]
-> **Authorised Scanning Notice:**  
-> The Quantum Flow scanner is designed exclusively to inspect endpoints, certificates, and infrastructure that an organization owns or has received **explicit, documented legal authorization** to assess.  
-> - Scanning unauthorized targets or attempting to bypass network controls is strictly prohibited and violates platform policy and computer misuse legislation.
-> - The platform incorporates non-bypassable pre-connection checks blocking private IPv4/IPv6 ranges (RFC 1918), loopback, link-local, and cloud metadata services (`169.254.169.254`).
-> - Target scanning during development is strictly restricted to RFC 5737 and RFC 3849 documentation testnets (`ALLOW_TEST_TARGETS_ONLY=true`).
-> - **The platform NEVER collects, handles, or stores private cryptographic keys.**
-
-For security disclosures, review [`SECURITY.md`](SECURITY.md) and the [`Incident Response Plan`](docs/07-security/Incident_Response_Plan.md).
+- **Status:** Sprint 1 Implementation Complete (Discovery, CBOM, Risk Engine, and Public Portal).
+- **Core Engine:** Non-intrusive TLS handshake inspection, AST Python source code scanning, and OS-contained archive processing verified.
+- **Intelligence:** QVI Methodology v1.0 risk scoring, CycloneDX 1.6 CBOM export, and RFC 8785 Canonical JSON report hashing operational.
+- **Interface:** React 18 public website, free public scanner, and enterprise management console fully integrated.
+- **Test Coverage:** All unit, integration, type-check, and lint verification gates passing cleanly across backend and frontend suites.
 
 ---
 
-## 16. Current Development Status
+## 16. Future Work and Roadmap
 
-> [!IMPORTANT]
-> **CURRENT REPOSITORY STAGE: SPRINT 0 (ENGINEERING FOUNDATION COMPLETE)**  
-> - **Engineering Foundation:** Modular monolith backend (`services/api`), worker daemon scaffold (`services/worker`), and React 18/TypeScript web shell (`apps/web`) are active and verified.
-> - **Persistence & Cache:** PostgreSQL 16 (SQLAlchemy 2.x async engine) and Redis 7 (async client) integrated with dual `/health/live` and `/health/ready` telemetry probes.
-> - **Database Migrations:** Alembic migration environment operational in `migrations/`.
-> - **Testing & CI/CD:** 20 automated tests passing (14 backend tests covering config, health, routing, and CORS security; 6 frontend tests covering shell rendering, telemetry widgets, degraded states, and navigation). GitHub Actions CI workflow configured in `.github/workflows/ci.yml`.
-> - **Planned Subsystems:** Production TLS network scanning, CBOM correlation engine, and deterministic quantum risk engine are scheduled for implementation in Sprints 1–6 per the [Implementation Roadmap](docs/09-project-management/Implementation_Roadmap.md).
+The following capabilities are planned for upcoming development milestones:
 
----
-
-## 17. Governance & Contribution Guidelines
-
-We maintain high standards of professional conduct, engineering rigor, and ethical research:
-- All participants must adhere to the [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md).
-- All non-trivial work requires a linked backlog task (`QF-XXX`).
-- Use prefixed branches: `feature/`, `fix/`, `security/`, `docs/`, `chore/`.
-- Conventional commit messages are strictly enforced.
-- Security-sensitive changes require mandatory CISO / Security Architect review.
-- Documentation updates must follow the [`Documentation Governance Guide`](docs/Documentation_Governance.md).
-
-Read [`CONTRIBUTING.md`](CONTRIBUTING.md) and [`docs/08-development/Contribution_Guide.md`](docs/08-development/Contribution_Guide.md) before submitting a pull request.
+- **Hardware Security Module (HSM) Integration:** Native PKCS#11 network discovery plugins to inspect keys and certificates residing within enterprise HSM appliances (e.g., Thales Luna, Utimaco, AWS CloudHSM).
+- **Kernel-Level eBPF Network Monitoring:** Linux eBPF probes for continuous, passive observation of live TLS handshakes across internal Kubernetes microservices without sidecar overhead.
+- **Automated PQC Remediation Pull Request Bot:** Automated code refactoring engine generating pull requests that upgrade deprecated cryptographic libraries (e.g., transitioning RSA key generation to ML-KEM-768 hybrid wrappers).
+- **Multi-Cloud Key Management Sync:** Native read-only connectors for AWS KMS, Azure Key Vault, and Google Cloud KMS to catalog cloud-hosted cryptographic keys.
+- **Enterprise Identity and Directory Integration:** SAML 2.0, OIDC, and SCIM directory synchronization for enterprise role-based access control (RBAC).
+- **Monetary Quantum Risk Exposure Modeling:** Financial risk quantification estimating breach exposure and remediation costs associated with Harvest Now, Decrypt Later threats.
 
 ---
 
-## License Status
+## 17. Engineering Governance and Contributions
 
-This software is a proprietary enterprise product developed by Quantum Flow Technologies. Licensing terms remain undecided pending formal corporate and legal authorization. No open-source license is granted at this stage.
+Contributions must meet the following repository standards:
+- All changes must pass `ruff check`, `ruff format --check`, and `mypy` without warnings or suppressions.
+- Unit and integration tests must accompany new parsers, endpoints, and schema changes.
+- Commit messages must follow the Conventional Commits specification (e.g., `feat:`, `fix:`, `docs:`, `chore:`).
+- Documented governance procedures are detailed in [`docs/08-development/Contribution_Guide.md`](docs/08-development/Contribution_Guide.md).
+
+---
+
+## 18. License Status
+
+This software is proprietary and confidential. All rights are reserved by Quantum Flow Technologies. Unauthorized duplication, modification, or distribution is strictly prohibited.

@@ -33,6 +33,9 @@ export interface AppProps {
 const AppContent: React.FC = () => {
   const { path, params, navigate } = useRouter();
 
+  // Normalize path safely against query params and trailing slashes
+  const currentPath = path.split("?")[0].replace(/\/+$/, "") || "/";
+
   // Determine test environment safely without Node global process
   const isTestMode =
     typeof (import.meta as unknown as { env?: { MODE?: string } }).env?.MODE !== "undefined" &&
@@ -40,17 +43,17 @@ const AppContent: React.FC = () => {
 
   // Determine if active view should be the Enterprise Console
   // In test mode, default root "/" tests the enterprise shell directly for backward compatibility
-  const isEnterprise = path.startsWith("/app") || (isTestMode && (path === "/" || path === ""));
+  const isEnterprise = currentPath.startsWith("/app") || (isTestMode && (currentPath === "/" || currentPath === ""));
 
   // Enterprise console state
   const [activeTab, setActiveTab] = useState<string>(() => {
-    if (path === "/app/assessments") return "assessments";
-    if (path === "/app/assessments/new") return "assessments-new";
-    if (path === "/app/inventory") return "inventory";
-    if (path === "/app/risk") return "prioritise";
-    if (path === "/app/settings") return "settings";
-    if (path === "/app/discover") return "discover";
-    if (path === "/app/plan") return "plan";
+    if (currentPath === "/app/assessments") return "assessments";
+    if (currentPath === "/app/assessments/new") return "assessments-new";
+    if (currentPath === "/app/inventory") return "inventory";
+    if (currentPath === "/app/risk") return "prioritise";
+    if (currentPath === "/app/settings") return "settings";
+    if (currentPath === "/app/discover") return "discover";
+    if (currentPath === "/app/plan") return "plan";
     return "diagnostics";
   });
 
@@ -141,23 +144,23 @@ const AppContent: React.FC = () => {
       <div className="qf-public-layout" style={{ minHeight: "100vh", display: "flex", flexDirection: "column", backgroundColor: "var(--bg-primary)" }}>
         <PublicNavbar />
         <main style={{ flex: 1 }}>
-          {path === "/" && <HomePage />}
-          {path === "/platform" && <PlatformPage />}
-          {path === "/intelligence" && <IntelligencePage />}
-          {path === "/resources" && <ResourcesPage />}
-          {path === "/about" && <AboutPage />}
-          {path === "/scan" && <ScannerPage />}
-          {path.startsWith("/scan/results") && <ScanResultsPage />}
-          {path === "/request-demo" && <RequestDemoPage />}
+          {currentPath === "/" && <HomePage />}
+          {currentPath === "/platform" && <PlatformPage />}
+          {currentPath === "/intelligence" && <IntelligencePage />}
+          {currentPath === "/resources" && <ResourcesPage />}
+          {currentPath === "/about" && <AboutPage />}
+          {currentPath === "/scan" && <ScannerPage />}
+          {currentPath.startsWith("/scan/results") && <ScanResultsPage />}
+          {currentPath === "/request-demo" && <RequestDemoPage />}
           {/* Fallback for unknown public paths */}
-          {path !== "/" &&
-            path !== "/platform" &&
-            path !== "/intelligence" &&
-            path !== "/resources" &&
-            path !== "/about" &&
-            path !== "/scan" &&
-            !path.startsWith("/scan/results") &&
-            path !== "/request-demo" && <HomePage />}
+          {currentPath !== "/" &&
+            currentPath !== "/platform" &&
+            currentPath !== "/intelligence" &&
+            currentPath !== "/resources" &&
+            currentPath !== "/about" &&
+            currentPath !== "/scan" &&
+            !currentPath.startsWith("/scan/results") &&
+            currentPath !== "/request-demo" && <HomePage />}
         </main>
         <PublicFooter />
       </div>

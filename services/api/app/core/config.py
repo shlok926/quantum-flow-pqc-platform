@@ -3,7 +3,7 @@
 Loads typed configuration from environment variables with safe development defaults.
 """
 
-from typing import Annotated
+from typing import Annotated, Any
 
 from pydantic import BeforeValidator, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -36,7 +36,7 @@ def _parse_cors_origins(v: object) -> list[str]:
     return default_origins
 
 
-CorsOriginsType = Annotated[list[str], BeforeValidator(_parse_cors_origins)]
+CorsOriginsType = Annotated[Any, BeforeValidator(_parse_cors_origins)]
 
 
 class Settings(BaseSettings):

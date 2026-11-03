@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Radar,
   ShieldCheck,
@@ -43,6 +43,17 @@ export const ScannerPage: React.FC = () => {
 
   const [authConfirmed, setAuthConfirmed] = useState<boolean>(false);
   const [validationError, setValidationError] = useState<string | null>(null);
+
+  // Sync domain query parameter if URL search updates
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const sp = new URLSearchParams(window.location.search);
+      const dom = sp.get("domain");
+      if (dom && !domainInput) {
+        setDomainInput(dom);
+      }
+    }
+  }, [domainInput]);
 
   // Execution states
   const [isScanning, setIsScanning] = useState<boolean>(false);
@@ -435,12 +446,36 @@ export const ScannerPage: React.FC = () => {
             </div>
 
             {/* Authorization Checkbox */}
-            <div style={{ padding: "1rem 1.25rem", backgroundColor: "var(--bg-tertiary)", borderRadius: "8px", border: "1px solid var(--border-light)" }}>
-              <label style={{ display: "flex", alignItems: "flex-start", gap: "0.6rem", cursor: "pointer", fontSize: "0.85rem", color: "var(--text-secondary)", lineHeight: 1.5 }}>
+            <div
+              style={{
+                padding: "1rem 1.25rem",
+                backgroundColor: "var(--bg-tertiary)",
+                borderRadius: "8px",
+                border:
+                  validationError && !authConfirmed
+                    ? "1px solid var(--rose-primary)"
+                    : "1px solid var(--border-light)",
+                transition: "border 0.2s ease",
+              }}
+            >
+              <label
+                style={{
+                  display: "flex",
+                  alignItems: "flex-start",
+                  gap: "0.6rem",
+                  cursor: "pointer",
+                  fontSize: "0.85rem",
+                  color: "var(--text-secondary)",
+                  lineHeight: 1.5,
+                }}
+              >
                 <input
                   type="checkbox"
                   checked={authConfirmed}
-                  onChange={(e) => setAuthConfirmed(e.target.checked)}
+                  onChange={(e) => {
+                    setAuthConfirmed(e.target.checked);
+                    if (validationError) setValidationError(null);
+                  }}
                   style={{ marginTop: "3px" }}
                 />
                 <span>
