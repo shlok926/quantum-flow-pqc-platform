@@ -11,17 +11,30 @@ Verifies:
 
 import json
 import uuid
+from typing import Any
 
 import pytest
-from cyclonedx.schema import SchemaVersion  # type: ignore
-from cyclonedx.validation.json import JsonValidator  # type: ignore
 
 from packages.reports.exporter import export_assessment_cyclonedx
 
+try:
+    from cyclonedx.schema import SchemaVersion  # type: ignore
+    from cyclonedx.validation.json import JsonValidator  # type: ignore
+
+    HAVE_CYCLONEDX = True
+except ImportError:
+    HAVE_CYCLONEDX = False
+
+pytestmark = pytest.mark.skipif(
+    not HAVE_CYCLONEDX, reason="cyclonedx-python-lib is required for CBOM schema validation"
+)
+
 
 @pytest.fixture
-def validator_1_6() -> JsonValidator:
+def validator_1_6() -> Any:
     """Fixture providing CycloneDX 1.6 official JSON schema validator."""
+    if not HAVE_CYCLONEDX:
+        pytest.skip("cyclonedx-python-lib not installed")
     return JsonValidator(SchemaVersion.V1_6)
 
 
