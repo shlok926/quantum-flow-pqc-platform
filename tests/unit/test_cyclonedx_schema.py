@@ -13,8 +13,8 @@ import json
 import uuid
 
 import pytest
-from cyclonedx.schema import SchemaVersion
-from cyclonedx.validation.json import JsonValidator
+from cyclonedx.schema import SchemaVersion  # type: ignore
+from cyclonedx.validation.json import JsonValidator  # type: ignore
 
 from packages.reports.exporter import export_assessment_cyclonedx
 

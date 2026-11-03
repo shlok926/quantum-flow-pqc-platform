@@ -26,6 +26,7 @@ import uuid
 import zipfile
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -133,7 +134,7 @@ class TestPreParsingSlotLockAndConcurrency:
         """Test 9: Send chunked stream exceeding 25MB; assert stream is capped with HTTP 413."""
 
         # Generator simulating streaming chunks beyond 25MB wrapped in multipart
-        async def oversized_stream():
+        async def oversized_stream() -> Any:
             yield b'--boundary\r\nContent-Disposition: form-data; name="file"; filename="large.zip"\r\nContent-Type: application/zip\r\n\r\n'
             chunk = b"A" * (1024 * 1024)  # 1MB
             for _ in range(26):
@@ -238,7 +239,7 @@ class TestStorageQuotaAndFinalization:
         (token_dir / "reservation.json").write_text(json.dumps(res_data), encoding="utf-8")
         (token_dir / "source.zip.part").write_bytes(b"streaming...")
 
-        worker = AutonomousWorker(session_maker=lambda: test_db_session)
+        worker = AutonomousWorker(session_maker=lambda: test_db_session)  # type: ignore[arg-type]
         # Mock postgres dialect so slot key probe executes
         monkeypatch.setattr(test_db_session.bind.dialect, "name", "postgresql")
         with patch.object(test_db_session, "scalar", AsyncMock(return_value=False)):
@@ -274,7 +275,7 @@ class TestStorageQuotaAndFinalization:
         (token_dir / "metadata.json").write_text(json.dumps(meta), encoding="utf-8")
         (token_dir / "code.zip").write_bytes(b"PK\x03\x04...")
 
-        worker = AutonomousWorker(session_maker=lambda: test_db_session)
+        worker = AutonomousWorker(session_maker=lambda: test_db_session)  # type: ignore[arg-type]
         stats = await worker.check_staging_gc(test_db_session)
         # Active unbound upload (<4h) is preserved
         assert stats["preserved"] >= 1
@@ -516,7 +517,7 @@ class TestScratchWorkspaceAndAdvisoryLocking:
         test_db_session.add(job)
         await test_db_session.commit()
 
-        worker = AutonomousWorker(session_maker=lambda: test_db_session)
+        worker = AutonomousWorker(session_maker=lambda: test_db_session)  # type: ignore[arg-type]
         stats = await worker.check_scratch_gc(test_db_session)
         assert stats["preserved"] >= 1
         assert ws.exists()
@@ -537,7 +538,7 @@ class TestScratchWorkspaceAndAdvisoryLocking:
         ws = scratch_dir / ws_name
         ws.mkdir()
 
-        worker = AutonomousWorker(session_maker=lambda: test_db_session)
+        worker = AutonomousWorker(session_maker=lambda: test_db_session)  # type: ignore[arg-type]
         stats = await worker.check_scratch_gc(test_db_session)
         assert stats["orphans"] >= 1
         assert ws.exists()
@@ -697,7 +698,7 @@ class TestCleanupFailureRecoveryAndStartupReconciliation:
         }
         rec_file.write_text(json.dumps(rec_data), encoding="utf-8")
 
-        worker = AutonomousWorker(session_maker=lambda: test_db_session)
+        worker = AutonomousWorker(session_maker=lambda: test_db_session)  # type: ignore[arg-type]
         stats = await worker.check_cleanup_failures_gc(test_db_session)
         assert stats["escalated"] == 1
 
@@ -872,7 +873,7 @@ class TestGarbageCollectionClassification:
         }
         (fresh_dir / "metadata.json").write_text(json.dumps(fresh_meta), encoding="utf-8")
 
-        worker = AutonomousWorker(session_maker=lambda: test_db_session)
+        worker = AutonomousWorker(session_maker=lambda: test_db_session)  # type: ignore[arg-type]
         stats = await worker.check_staging_gc(test_db_session)
 
         assert stats["purged"] >= 1

@@ -309,6 +309,7 @@ class TestReportDeliveryAPI:
             text_content = resp.content.decode("utf-8")
             assert "Maximum Asset QVI" in text_content
             assert "Integrity Verification" in text_content
+            assert ass.report_snapshot_hash is not None
             assert ass.report_snapshot_hash in text_content
         finally:
             app.dependency_overrides.pop(get_current_identity, None)

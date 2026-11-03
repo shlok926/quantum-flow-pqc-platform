@@ -97,6 +97,16 @@ warn_no_return = true
 strict_equality = true
 mypy_path = "."
 
+[[tool.mypy.overrides]]
+module = [
+    "win32api",
+    "win32con",
+    "win32job",
+    "win32process",
+    "cyclonedx.*",
+]
+ignore_missing_imports = true
+
 [tool.pytest.ini_options]
 minversion = "8.0"
 addopts = "-ra -q --strict-markers"

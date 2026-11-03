@@ -37,8 +37,8 @@ class TestWindowsProcessContainment:
 
     def test_windows_job_object_configuration_and_no_breakaway(self) -> None:
         """Verify Job Object enforces KILL_ON_JOB_CLOSE with breakaway flags strictly removed."""
-        import win32api  # type: ignore[import-untyped]
-        import win32job  # type: ignore[import-untyped]
+        import win32api  # type: ignore
+        import win32job  # type: ignore
 
         h_job = create_windows_job_object(f"qf_test_cfg_{uuid.uuid4().hex[:8]}")
         assert h_job is not None, "Failed to create Win32 Job Object"
@@ -67,10 +67,10 @@ class TestWindowsProcessContainment:
 
     def test_windows_suspended_launch_and_pre_execution_assignment(self) -> None:
         """Verify process starts suspended, assigns to Job Object, resumes, and exits clean."""
-        import win32api  # type: ignore[import-untyped]
-        import win32con  # type: ignore[import-untyped]
-        import win32job  # type: ignore[import-untyped]
-        import win32process  # type: ignore[import-untyped]
+        import win32api  # type: ignore
+        import win32con  # type: ignore
+        import win32job  # type: ignore
+        import win32process  # type: ignore
 
         h_job = create_windows_job_object(f"qf_test_susp_{uuid.uuid4().hex[:8]}")
         assert h_job is not None
@@ -144,10 +144,10 @@ class TestWindowsProcessContainment:
 
     def test_windows_descendant_termination(self) -> None:
         """Verify terminating Job Object kills parent and any child descendants transitively."""
-        import win32api  # type: ignore[import-untyped]
-        import win32con  # type: ignore[import-untyped]
-        import win32job  # type: ignore[import-untyped]
-        import win32process  # type: ignore[import-untyped]
+        import win32api  # type: ignore
+        import win32con  # type: ignore
+        import win32job  # type: ignore
+        import win32process  # type: ignore
 
         h_job = create_windows_job_object(f"qf_test_desc_{uuid.uuid4().hex[:8]}")
         assert h_job is not None
@@ -215,10 +215,10 @@ class TestWindowsProcessContainment:
 
     def test_windows_assignment_failure_fails_closed(self) -> None:
         """Verify that if Job Object assignment fails, suspended process is terminated immediately."""
-        import win32api  # type: ignore[import-untyped]
-        import win32con  # type: ignore[import-untyped]
-        import win32job  # type: ignore[import-untyped]
-        import win32process  # type: ignore[import-untyped]
+        import win32api  # type: ignore
+        import win32con  # type: ignore
+        import win32job  # type: ignore
+        import win32process  # type: ignore
 
         hp = None
         ht = None
