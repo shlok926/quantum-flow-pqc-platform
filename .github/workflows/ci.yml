@@ -70,12 +70,14 @@ jobs:
 
       - name: Run Database Migrations
         env:
+          APP_ENV: test
           DATABASE_URL_SYNC: postgresql+psycopg2://quantumflow:quantumflow_secret_dev@localhost:5434/quantumflow_db
           DATABASE_URL: postgresql+asyncpg://quantumflow:quantumflow_secret_dev@localhost:5434/quantumflow_db
         run: python -m alembic upgrade head
 
       - name: Run Pytest Test Suite
         env:
+          APP_ENV: test
           DATABASE_URL_SYNC: postgresql+psycopg2://quantumflow:quantumflow_secret_dev@localhost:5434/quantumflow_db
           DATABASE_URL_ASYNC: postgresql+asyncpg://quantumflow:quantumflow_secret_dev@localhost:5434/quantumflow_db
           DATABASE_URL: postgresql+asyncpg://quantumflow:quantumflow_secret_dev@localhost:5434/quantumflow_db

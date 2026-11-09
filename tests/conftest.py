@@ -1,5 +1,10 @@
 """Quantum Flow Technologies — Global Test Fixtures and Configuration."""
 
+import os
+
+# Guarantee test runtime environment regardless of developer .env settings
+os.environ["APP_ENV"] = "test"
+
 from collections.abc import AsyncGenerator
 from typing import Any, cast
 
